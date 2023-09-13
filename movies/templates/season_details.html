@@ -1,0 +1,19 @@
+<img src="http://image.tmdb.org/t/p/w500/{{season.poster_path}}" width='120' alt="" srcset="">
+<h1>{{season.name}}</h1>
+
+<p>{{season.overview}}</p>
+
+<h2>Score: {{season.vote_average}}</h2>
+
+<h2> Episodes: </h2>
+
+<ol>
+    {% for episode in season.episodes %}
+    <ul>
+        Episode: {{episode.episode_number}} - {{episode.episode_name}}
+        <img src="http://image.tmdb.org/t/p/w500/{{episode.still_path}}" width='120' alt="" srcset="">
+        {{episode.overview}}
+        TMDB Score: {{episode.vote_average|floatformat}}
+    </ul>
+    {% endfor %}
+</ol>

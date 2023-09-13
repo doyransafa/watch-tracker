@@ -1,0 +1,35 @@
+{% for result in results.results %}
+
+    {# field name changes based on seach link. multi gives media type, other searches don't #}
+
+    <div>
+        {% if type == 'multi' %}
+            {% if result.media_type == 'movie' %}
+                <a href="{%url 'movie_details' result.id %}">{{result.title}}</a>
+            {% elif result.media_type == 'tv' %}
+                <a href="{%url 'tv_details' result.id %}">{{result.name}}</a>
+            {% elif result.media_type == 'person' %}
+                <a href="{%url 'person_details' result.id %}">{{result.name}}</a>
+            {% endif %}
+
+            {%if result.media_type in 'movie,tv' %}
+                <img src="http://image.tmdb.org/t/p/w500/{{result.poster_path}}" width='60' alt="" srcset="">
+            {% else %}
+                <img src="http://image.tmdb.org/t/p/w500/{{result.profile_path}}" width='60' alt="" srcset="">
+            {% endif %}
+        
+        {% elif type == 'movie' %}
+            <a href="{%url 'movie_details' result.id %}">{{result.title}}</a>
+            <img src="http://image.tmdb.org/t/p/w500/{{result.poster_path}}" width='60' alt="" srcset="">
+        {% elif type == 'tv' %}
+            <a href="{%url 'tv_details' result.id %}">{{result.name}}</a>
+            <img src="http://image.tmdb.org/t/p/w500/{{result.poster_path}}" width='60' alt="" srcset="">
+        {% elif type == 'person' %}
+            <a href="{%url 'person_details' result.id %}">{{result.name}}</a>
+            <img src="http://image.tmdb.org/t/p/w500/{{result.profile_path}}" width='60' alt="" srcset="">
+        {% endif %}
+
+    
+    </div>
+    
+{% endfor %}

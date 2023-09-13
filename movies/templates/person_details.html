@@ -1,0 +1,139 @@
+<h1>{{person.name}} <sub>({{person.birthday}})</sub> </h1> 
+
+<img src="http://image.tmdb.org/t/p/w500/{{person.profile_path}}" width='120' alt="{{person.name}}" srcset="">
+
+<h2><a href="https://www.imdb.com/name/{{person.imdb_id}}">IMDb link</a></h2>
+
+
+{% if roles.is_cinema_related %}
+    <h2>Movies:</h2>
+
+    {% if roles.is_cinema_actor %}
+        <h3>Acting:</h3>
+        <ul>
+            {% for movie in person.movie_credits.cast %}
+            <li>
+                <p>{{movie.title}} - {{movie.character}}</p>
+                <p>{{movie.overview}}</p>
+            </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if roles.is_cinema_director %}
+        <h3>Director:</h3>
+        <ul>
+            {% for movie in person.movie_credits.crew %}
+                {% if movie.department == 'Directing' %}
+                <li>
+                    <p>{{movie.title}} - {{movie.job}}</p>
+                    <p>{{movie.overview}}</p>
+                </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if roles.is_cinema_producer %}
+        <h3>Producer:</h3>
+        <ul>
+            {% for movie in person.movie_credits.crew %}
+                {% if movie.department == 'Production' %}
+                    <li>
+                        <p>{{movie.title}} - {{movie.job}}</p>
+                        <p>{{movie.overview}}</p>
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if roles.is_cinema_writer %}
+        <h3>Writer:</h3>
+        <ul>
+            {% for movie in person.movie_credits.crew %}
+                {% if movie.department == 'Writing' %}
+                <li>
+                    <p>{{movie.title}} - {{movie.job}}</p>
+                    <p>{{movie.overview}}</p>
+                </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+{% endif %}
+
+{% if roles.is_tv_related %}
+
+<h2>Tv Series:</h2>
+
+    {% if roles.is_tv_actor %}
+        <h3>Acting:</h3>
+        <ul>
+            {% for tv in person.tv_credits.cast %}
+            <li>
+                <p>{{tv.name}} - {{tv.character}}</p>
+                <p>{{tv.overview}}</p>
+            </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if roles.is_tv_creator %}
+        <h3>Creator:</h3>
+        <ul>
+            {% for tv in person.tv_credits.crew %}
+                {% if tv.department == 'Creator' %}
+                <li>
+                    <p>{{tv.name}} - {{tv.job}}</p>
+                    <p>{{tv.overview}}</p>
+                </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if roles.is_tv_director %}
+        <h3>Director:</h3>
+        <ul>
+            {% for tv in person.tv_credits.crew %}
+                {% if tv.department == 'Directing' %}
+                <li>
+                    <p>{{tv.name}} - {{tv.job}}</p>
+                    <p>{{tv.overview}}</p>
+                </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if roles.is_tv_producer %}
+        <h3>Producer:</h3>
+        <ul>
+            {% for tv in person.tv_credits.crew %}
+                {% if tv.department == 'Production' %}
+                    <li>
+                        <p>{{tv.name}} - {{tv.job}}</p>
+                        <p>{{tv.overview}}</p>
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if roles.is_tv_writer %}
+        <h3>Writer:</h3>
+        <ul>
+            {% for tv in person.tv_credits.crew %}
+                {% if tv.department == 'Writing' %}
+                <li>
+                    <p>{{tv.name}} - {{tv.job}}</p>
+                    <p>{{tv.overview}}</p>
+                </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+{% endif %}

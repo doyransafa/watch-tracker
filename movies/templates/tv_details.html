@@ -1,0 +1,57 @@
+<h1>{{tv.name}}</h1>
+<img src="http://image.tmdb.org/t/p/w500/{{tv.poster_path}}" width='120' alt="{{tv.name}}" srcset="">
+<p>Avg episode length: {{tv.episode_run_time.0}}</p>
+<p>{% if tv.in_production %} Active {% else %} Ended in {{tv.last_air_date}} {% endif %}</p>
+
+<p>{{tv.overview}}</p>
+
+<h2>Genres:</h2> {% for genre in tv.genres %} {{genre.name}} - {{genre.id}} {% endfor %}
+<h2>Created By:</h2> {% for creator in tv.created_by %} {{creator.name}} {% endfor %}
+
+<h3><a href="https://www.imdb.com/title/{{tv.external_ids.imdb_id}}">IMDb link</a></h3>
+
+<h3>Total seasons: </h3> {{tv.number_of_seasons}}
+<h3>Total episodes: </h3> {{tv.number_of_episodes}}
+
+<h2>Where to Watch:</h2> 
+{% if tv.watch_providers.results.TR.flatrate %}
+{% for platform in tv.watch_providers.results.TR.flatrate  %} {{platform.provider_name}} {% endfor %}
+
+{% else %}
+
+No providers in Turkey
+
+{% endif %}
+
+<h2>Seasons:</h2>
+<ul>
+{% for season in tv.seasons %}
+    <li>
+        <a href="{%url 'season_details' tv.id season.season_number %}">
+        Season {{season.season_number}} {% if season.season_number == 0 %} (Specials) {% endif %} - ({{season.episode_count}} Episodes) 
+        <img src="http://image.tmdb.org/t/p/w500/{{season.poster_path}}" width='120' alt="{{season.name}}" srcset="">
+        </a>
+    </li>
+{% endfor %}
+</ul>
+
+<h2>Cast:</h2>
+<ul>
+{% for cast in tv.aggregate_credits.cast|slice:":10" %}
+    <li>
+        {{cast.name}} as {{cast.roles.0.character}} ({{cast.total_episode_count}} Episodes) 
+        <img src="http://image.tmdb.org/t/p/w500/{{cast.profile_path}}" width='120' alt="{{cast.name}}" srcset="">
+    </li>
+{% endfor %}
+</ul>
+
+
+<h2>You Might Also Like:</h2>
+<ul>
+{% for show in tv.recommendations.results|slice:":10" %}
+    <li>
+        {{show.name}} 
+        <img src="http://image.tmdb.org/t/p/w500/{{show.poster_path}}" width='120' alt="{{cast.name}}" srcset="">
+    </li>
+{% endfor %}
+</ul>

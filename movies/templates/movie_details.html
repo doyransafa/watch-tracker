@@ -1,0 +1,30 @@
+<h1>{{movie.title}}</h1>
+<p>Overview: {{movie.overview}}</p>
+<p>Release Date: {{movie.release_date}}</p>
+<img src="http://image.tmdb.org/t/p/w500/{{movie.poster_path}}" width='120' alt="{{cast.name}}" srcset="">
+<a href="https://www.imdb.com/title/{{movie.imdb_id}}/">IMDb link</a>
+
+<h2>Directors:</h2> {% for member in movie.credits.crew %} {% if member.job == "Director" %} {{member.name}} {% endif %} {% endfor %}
+
+<h2>Genres:</h2> {% for genre in movie.genres %} {{genre.name}} - {{genre.id}} {% endfor %}
+
+<h2>Duration:</h2> {{ movie.runtime }}
+
+{% if movie.belongs_to_collection %}
+
+<h2>Series</h2> {{movie.belongs_to_collection.name}}
+
+{% endif %}
+
+<h2>TMDB Score:</h2> {{movie.vote_average|floatformat}}
+
+<h2>Where to Watch:</h2> {% for platform in movie.watch_providers.results.TR.flatrate  %} {{platform.provider_name}} {% endfor %}
+
+<h2>Cast:</h2>
+<ul>
+    {% for cast in movie.credits.cast|slice:":10" %}
+    <li> Name: <a href="{%url 'person_details' cast.id %}">{{cast.name}}</a> - Character: {{cast.character}} <img src="http://image.tmdb.org/t/p/w500/{{cast.profile_path}}" width='60' alt="{{cast.name}}" srcset=""> </li>
+    {% endfor %}
+</ul>
+
+
