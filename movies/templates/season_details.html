@@ -1,3 +1,10 @@
+<head>
+<script src="https://unpkg.com/htmx.org@1.9.5"></script>
+<script src="https://unpkg.com/hyperscript.org@0.9.11"></script>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
 <img src="http://image.tmdb.org/t/p/w500/{{season.poster_path}}" width='120' alt="" srcset="">
 <h1>{{season.name}}</h1>
 
@@ -10,10 +17,37 @@
 <ol>
     {% for episode in season.episodes %}
     <ul>
-        Episode: {{episode.episode_number}} - {{episode.episode_name}}
+        Episode: {{episode.episode_number}} - {{episode.name}}
         <img src="http://image.tmdb.org/t/p/w500/{{episode.still_path}}" width='120' alt="" srcset="">
         {{episode.overview}}
         TMDB Score: {{episode.vote_average|floatformat}}
+
+        <span hx-get="{%url 'toggle_event' 'like' 'episode' episode.show_id%}?name={{name}}&season={{season.season_number}}&episode={{episode.episode_number}}" 
+        hx-swap='innerHtml' class="material-icons hover:cursor-pointer" style='color:#cf1fa8'>
+            {% if episode.liked %} favorite {% else %} favorite_border {% endif %}
+        </span>
+        <span hx-get="{%url 'toggle_event' 'watched' 'episode' episode.show_id%}?name={{name}}&season={{season.season_number}}&episode={{episode.episode_number}}" hx-swap='innerHtml' 
+            class="material-icons hover:cursor-pointer
+            {% if episode.watched %} text-green-500 {% else %} text-red-500 {% endif %}
+            " 
+            _="on click toggle .text-green-500 .text-red-500 on me">
+                {% if episode.watched %} visibility {% else %} visibility_off {% endif %}
+        </span>
+
+        {% if episode.rating %}
+        <span class="material-icons text-yellow-500"> {% for rating in ''|ljust:episode.rating %}star {% endfor %} </span>
+        {% else %}
+        <select name="rating" hx-get="{%url 'toggle_event' 'rating' 'episode' episode.show_id%}?name={{name}}&season={{season.season_number}}&episode={{episode.episode_number}}" hx-trigger="change" hx-target="this" hx-swap="outerHTML">
+            <option value="0">Rate</option>
+            <option value="1">★</option>
+            <option value="2">★★</option>
+            <option value="3">★★★</option>
+            <option value="4">★★★★</option>
+            <option value="5">★★★★★</option>
+        </select>
+        {% endif %}
+
+
     </ul>
     {% endfor %}
 </ol>

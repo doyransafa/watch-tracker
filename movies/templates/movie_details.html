@@ -1,8 +1,60 @@
+<head>
+<script src="https://unpkg.com/htmx.org@1.9.5"></script>
+<script src="https://unpkg.com/hyperscript.org@0.9.11"></script>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"'>
+
+
 <h1>{{movie.title}}</h1>
 <p>Overview: {{movie.overview}}</p>
 <p>Release Date: {{movie.release_date}}</p>
+
+<span hx-get="{%url 'toggle_event' 'like' 'movie' movie.id%}?name={{movie.title}}" hx-swap='innerHtml' class="material-icons hover:cursor-pointer" style='color:#cf1fa8'>
+    {% if user_relation.liked %} favorite {% else %} favorite_border {% endif %}
+</span>
+<span hx-get="{%url 'toggle_event' 'bookmark' 'movie' movie.id%}?name={{movie.title}}" hx-swap='innerHtml' class="material-icons hover:cursor-pointer" style='color:#f7ac34'>
+    {% if user_relation.bookmarked %} bookmark {% else %} bookmark_border {% endif %}
+</span>
+<span hx-get="{%url 'toggle_event' 'watched' 'movie' movie.id%}?name={{movie.title}}" hx-swap='innerHtml' 
+class="material-icons hover:cursor-pointer
+{% if user_relation.watched %} text-green-500 {% else %} text-red-500 {% endif %}
+" 
+_="on click toggle .text-green-500 .text-red-500 on me">
+    {% if user_relation.watched %} visibility {% else %} visibility_off {% endif %}
+</span>
+
+<br>
+
+
+{% if user_relation.rating %}
+<span class="material-icons text-yellow-500"> {% for rating in ''|ljust:user_relation.rating %}star {% endfor %} </span>
+{% else %}
+<select name="rating" hx-get="{%url 'toggle_event' 'rating' 'movie' movie.id%}?name={{movie.title}}" hx-trigger="change" hx-target="this" hx-swap="outerHTML">
+    <option value="0">Rate</option>
+    <option value="1">★</option>
+    <option value="2">★★</option>
+    <option value="3">★★★</option>
+    <option value="4">★★★★</option>
+    <option value="5">★★★★★</option>
+</select>
+{% endif %}
+
+
 <img src="http://image.tmdb.org/t/p/w500/{{movie.poster_path}}" width='120' alt="{{cast.name}}" srcset="">
 <a href="https://www.imdb.com/title/{{movie.imdb_id}}/">IMDb link</a>
+
+<div id="comments" hx-get="{% url 'list_comments' 'movie' movie.id%}" hx-trigger="load, submit delay:250ms from:#comment" hx-swap="innerHTML">
+    {% include 'partials/comment_list.html' %}
+</div>
+
+<form id="comment" action="" hx-post="{%url 'post_comment' 'movie' movie.id%}?name={{movie.title}}" hx-swap="none" hx-on::after-request=" if(event.detail.successful) this.reset()">
+    {% csrf_token %}
+    <textarea name="comment" id="" cols="100" rows="5"></textarea>
+    <button type="submit">Send Comment</button>
+</form>
 
 <h2>Directors:</h2> {% for member in movie.credits.crew %} {% if member.job == "Director" %} {{member.name}} {% endif %} {% endfor %}
 
@@ -27,4 +79,4 @@
     {% endfor %}
 </ul>
 
-
+</body>

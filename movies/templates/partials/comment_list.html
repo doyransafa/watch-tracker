@@ -1,0 +1,14 @@
+{% if comments %}
+<ul id="comment_list">
+    {% if details.total_pages != details.current_page %}
+    <button hx-get="{% url 'list_comments' details.type details.id%}?page={{details.next_page}}" hx-target="#comment_list">Show More</button>
+    {% endif %}
+{% for comment in comments %}
+    <li>
+        {{comment.comment}} - {{comment.user.username}} - {{comment.created_at}}
+    </li>
+{% endfor %}
+</ul>
+{% else %}
+No comments yet for this. Be the first one!
+{% endif %}
