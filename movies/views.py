@@ -13,9 +13,9 @@ HEADERS = {
 }
 
 
-def first_view(request):
+def home(request):
 
-    return render(request, 'home.html', {'hello': 'hello'})
+    return render(request, 'index.html')
 
 
 def search(request):
@@ -36,7 +36,7 @@ def search(request):
 
 def movie_details(request, id):
 
-    appends = 'credits,watch/providers'
+    appends = 'credits,watch/providers,recommendations'
     url = f"https://api.themoviedb.org/3/movie/{id}?append_to_response={appends}"
 
     results = requests.get(url, headers=HEADERS).json()
@@ -81,7 +81,10 @@ def tv_details(request, id):
 
     json_data = json.loads(clean_json_string)
 
-    related_events = Event.objects.filter(Q(user=request.user),Q(tv_series__tmdb_id=id))
+    related_events = Event.objects.filter(Q(user=request.user), Q(
+        tv_series__tmdb_id=id), Q(tv_episode__isnull=True))
+    
+    print(related_events)
 
     liked = True if related_events.filter(Q(type='like')).exists() else False
     bookmarked = True if related_events.filter(Q(type='bookmark')).exists() else False
@@ -132,7 +135,12 @@ def season_details(request, id, season):
         except IndexError:
             episode['rating'] = 0
 
-    context = {"season": json_data["episodes"], 'name': json_data['name']}
+    context = {"season": json_data["episodes"], 
+               'name': json_data['name'],
+               'poster_id': json_data['poster_path'], 
+               'show_id': json_data['id'],
+               'first_season': json_data['seasons'][0]['season_number'],
+               'last_season': json_data['seasons'][-1]['season_number']}
 
     return render(request, 'season_details.html', context)
 
@@ -184,6 +192,7 @@ def person_details(request, id):
 def toggle_event(request, event_type, media_type, id):
 
     name = request.GET.get('name', '')
+    poster_id = request.GET.get('poster_id')
     try:
         season = int(request.GET.get('season', 0))
         episode = int(request.GET.get('episode', 0))
@@ -195,16 +204,28 @@ def toggle_event(request, event_type, media_type, id):
     type = event_type
     movie, tv_series, list, tv_episode = None, None, None, None
     if media_type == 'movie':
-        movie, _ = Movie.objects.get_or_create(tmdb_id=id, name=name)
+        movie, _ = Movie.objects.get_or_create(
+            tmdb_id=id, name=name, poster_id=poster_id)
     elif media_type == 'tv':
-        tv_series, _ = Tv_Series.objects.get_or_create(tmdb_id=id, name=name)
+        tv_series, _ = Tv_Series.objects.get_or_create(tmdb_id=id, name=name, poster_id=poster_id)
     elif media_type == 'episode':
-        tv_series, _ = Tv_Series.objects.get_or_create(tmdb_id=id, name=name)
+        tv_series, _ = Tv_Series.objects.get_or_create(tmdb_id=id, name=name, poster_id=poster_id)
         tv_episode, _ = Tv_Episode.objects.get_or_create(tv_series=tv_series, season=season, episode=episode)
     else:
         list, _ = List.objects.get_or_create(tmdb_id=id, name=name)
 
     event, created = Event.objects.get_or_create(user=user, type=type, movie=movie, tv_series=tv_series, tv_episode=tv_episode, list=list, rating=rating)
+
+    params = {
+        'rating': rating,
+        'event_type': event_type,
+        'media_type': media_type,
+        'id': id,
+        'name': name,
+        'poster_id': poster_id,
+        'season': season,
+        'episode': episode,
+    }
 
     if created:
         if type == 'like':
@@ -214,29 +235,27 @@ def toggle_event(request, event_type, media_type, id):
         elif type == 'watched':
             return HttpResponse('visibility')
         elif type == 'rating':
-            return HttpResponse(f'<span class="material-icons text-yellow-500">{"star " * rating}</span>')
+
+            return render(request, 'partials/rating.html', params)
+
     else:
-        if type == 'rating':
-            event.rating = rating
-            event.save(update_fields=['rating'])
-            return HttpResponse(f'<span class="material-icons text-yellow-500">{"star " * rating}</span>')
-        else:
-            event.delete()
-            if type == 'like':
-                return HttpResponse('favorite_border')
-            elif type == 'bookmark':
-                return HttpResponse('bookmark_border')
-            elif type == 'watched':
-                return HttpResponse('visibility_off')
-            
+        event.delete()
+        if type == 'like':
+            return HttpResponse('favorite_border')
+        elif type == 'bookmark':
+            return HttpResponse('bookmark_border')
+        elif type == 'watched':
+            return HttpResponse('visibility_off')
+        elif type == 'rating':
+
+            return render(request, 'partials/rating_select.html', params)
+        
 
 def post_comment(request, media_type, id):
 
     comment = request.POST.get('comment')
     name = request.GET.get('name')
     user = request.user
-
-    print(user, comment, name)
 
     movie, tv_series, list = None, None, None
     if media_type == 'movie':
@@ -248,8 +267,6 @@ def post_comment(request, media_type, id):
     else:
         raise HttpResponse(404)
     
-    
-
     comment_object = Comment.objects.create(user=user, movie=movie, tv_series=tv_series, list=list, comment=comment)
 
     return HttpResponse(f'{comment} - {user.username} - {comment_object.created_at}')
@@ -257,7 +274,6 @@ def post_comment(request, media_type, id):
 
 def list_comments(request, media_type, id):
 
-    user = request.user
     page = int(request.GET.get('page', 1))
     pagination = 5
 
@@ -301,3 +317,60 @@ def list_comments(request, media_type, id):
     context = {'comments': post_comments, 'details': details }
 
     return render(request, 'partials/comment_list.html', context)
+
+
+def delete_rating(request, media_type, id):
+
+    try:
+        season = int(request.GET.get('season', 0))
+        episode = int(request.GET.get('episode', 0))
+    except ValueError:
+        pass
+    
+    if media_type == 'movie':
+        movie = Movie.objects.get(tmdb_id=id)
+    elif media_type == 'tv':
+        tv_series = Tv_Series.objects.get(tmdb_id=id)
+    elif media_type == 'episode':
+        tv_series = Tv_Series.objects.get(tmdb_id=id)
+        tv_episode = Tv_Episode.objects.get(tv_series=tv_series, season=season, episode=episode)
+    else:
+        list = List.objects.get(tmdb_id=id)
+
+    event = Event.objects.get(user=request.user, type='rating', movie=movie, tv_series=tv_series, tv_episode=tv_episode, list=list)
+
+    event.delete()
+
+    return HttpResponse('Rating Deleted')
+
+
+def bulk_watched(request, id):
+
+    season = request.GET.get('season', 'all')
+    name = request.GET.get('name', '')
+    poster_id = request.GET.get('poster_id')
+    tv_series, _ = Tv_Series.objects.get_or_create(tmdb_id=id, name=name, poster_id=poster_id)
+
+    if season != 'all':
+        loop_over = [int(season)]
+    else:
+        first_season = int(request.GET.get('first_season'))
+        last_season = int(request.GET.get('last_season'))
+        loop_over = range(first_season,last_season+1)
+
+    for season in loop_over:
+        season = int(season)
+        url = f"https://api.themoviedb.org/3/tv/{id}?append_to_response=season/{season}"
+
+        results = requests.get(url, headers=HEADERS).json()
+        json_string = json.dumps(results)
+        clean_json_string = json_string.replace(f'season/{season}', 'episodes')
+
+        json_data = json.loads(clean_json_string)
+
+        for index, episode in enumerate(json_data['episodes']['episodes'], 1):
+            tv_episode, _ = Tv_Episode.objects.get_or_create(tv_series=tv_series, season=season, episode=index)
+            Event.objects.get_or_create(user=request.user, type='watched', tv_series=tv_series, tv_episode=tv_episode)
+
+    print('Done')
+    return HttpResponse('visibility')

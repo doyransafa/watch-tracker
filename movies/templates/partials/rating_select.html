@@ -1,0 +1,8 @@
+<select id="rating_select" name="rating" hx-get="{%url 'toggle_event' event_type media_type id%}?name={{name}}&poster_id={{poster_id}}&season={{season}}&episode={{episode}}" hx-trigger="change" hx-target="this" hx-swap="outerHTML">
+    <option value="0">Rate</option>
+    <option value="1">★</option>
+    <option value="2">★★</option>
+    <option value="3">★★★</option>
+    <option value="4">★★★★</option>
+    <option value="5">★★★★★</option>
+</select>

@@ -1,0 +1,89 @@
+{{profile}}
+
+<h4>Watched {{watched.movies|length}} Movies, {{watched.tv_series|length}} Tv Series and {{watched.tv_episodes|length}} Episodes</h4>
+<h4>Liked {{likes.movies|length}} Movies, {{likes.tv_series|length}} Tv Series and {{likes.tv_episodes|length}} Episodes</h4>
+<h4>Bookmarked {{bookmarks.movies|length}} Movies, {{bookmarks.tv_series|length}} Tv Series</h4>
+
+
+<h1>Following:</h1>
+{% if following %}
+    {% for follow in following %}
+        <p>{{follow.following.username}}</p>
+    {% endfor %}
+{% else %}
+You aren't following anywone
+{% endif %}
+
+<h1>Followers:</h1>
+{% if followers %}
+    {% for follower in followers %}
+        <p>{{follower.follower.username}}</p>
+    {% endfor %}
+{% else %}
+You don't have any followers yet!
+{% endif %}
+
+<h1>Likes:</h1>
+{% if likes %}
+    {% for like in likes %}
+        {% if like.movie %}
+            <p>{{like.movie.name}}</p>
+            <img
+                src="http://image.tmdb.org/t/p/w500{{like.movie.poster_id}}"
+                width="120"
+            />
+        {%elif like.tv_series and like.tv_episode == null %}
+            <p>{{like.tv_series.name}}</p>
+            <img
+                src="http://image.tmdb.org/t/p/w500{{like.tv_series.poster_id}}"
+                width="120"
+            />
+        {% endif %}
+    {% endfor %}
+{% else %}
+User doesn't have any likes yet!
+{% endif %}
+
+<h1>Bookmarks:</h1>
+{% if bookmarks %}
+    {% for bookmark in bookmarks %}
+        <p>{{bookmark.movie.name}}</p>
+        <p>{{bookmark.tv_series.name}}</p>
+    {% endfor %}
+{% else %}
+User doesn't have any bookmarks yet!
+{% endif %}
+
+<h1>Rating:</h1>
+{% if ratings %}
+    {% for rating in ratings %}
+        {% if rating.movie %}
+            <p>{{rating.movie.name}} - {{rating.rating}} stars</p>
+        {%elif watch.tv_series%}
+            <p>{{rating.tv_series.name}} - {{rating.rating}} stars</p>
+        {% endif %}
+    {% endfor %}
+{% else %}
+User doesn't have any ratings yet!
+{% endif %}
+
+<h1>Watch History:</h1>
+{% if watched %}
+    {% for watch in watched %}
+        {% if watch.movie %}
+            <p>{{watch.movie.name}} - {{watch.created_at}}</p> 
+            <img
+                src="http://image.tmdb.org/t/p/w500{{watch.movie.poster_id}}"
+                width="120"
+            />
+        {%elif watch.tv_series and watch.tv_episode == null %}
+                <p>{{watch.tv_series.name}} - {{watch.created_at}}</p>
+                <img
+                    src="http://image.tmdb.org/t/p/w500{{watch.tv_series.poster_id}}"
+                    width="120"
+                />
+        {% endif %}
+    {% endfor %}
+{% else %}
+User doesn't have any watched stuff yet!
+{% endif %}

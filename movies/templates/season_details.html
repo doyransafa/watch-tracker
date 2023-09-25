@@ -1,53 +1,66 @@
-<head>
-<script src="https://unpkg.com/htmx.org@1.9.5"></script>
-<script src="https://unpkg.com/hyperscript.org@0.9.11"></script>
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com"></script>
-</head>
-
-<img src="http://image.tmdb.org/t/p/w500/{{season.poster_path}}" width='120' alt="" srcset="">
+<div class='rounded bg-slate-200 p-3 mb-3'>
 <h1>{{season.name}}</h1>
-
-<p>{{season.overview}}</p>
-
-<h2>Score: {{season.vote_average}}</h2>
-
-<h2> Episodes: </h2>
-
-<ol>
+<button> 
+    <a hx-get="{% url 'bulk_watched' show_id %}?name={{name}}&poster_id={{poster_id}}&season={{season.season_number}}"
+    hx-swap="none"
+    _="on click add .text-green-500 to .watched 
+    remove .text-red-500 from .watched
+    put 'visibility' into .watched"
+    >
+    Mark {{season.name}} Watched 
+    </a> 
+</button>
+<br>
+<button> 
+    <a hx-get="{% url 'bulk_watched' show_id %}?name={{name}}&poster_id={{poster_id}}&season=all&first_season={{first_season}}&last_season={{last_season}}"
+    hx-swap="none"
+    _="on click add .text-green-500 to .watched 
+    remove .text-red-500 from .watched
+    put 'visibility' into .watched"
+    > 
+    Mark All Seasons Watched 
+    </a> 
+</button>
+</div>
+<ol class='flex flex-col gap-3'>
     {% for episode in season.episodes %}
-    <ul>
-        Episode: {{episode.episode_number}} - {{episode.name}}
-        <img src="http://image.tmdb.org/t/p/w500/{{episode.still_path}}" width='120' alt="" srcset="">
-        {{episode.overview}}
-        TMDB Score: {{episode.vote_average|floatformat}}
+    <ul class='flex gap-4 rounded bg-slate-200 p-3'>
+        <div class='flex-shrink-0'>
+        <img src="http://image.tmdb.org/t/p/w500/{{episode.still_path}}" width='160' height='120' alt="" srcset="" class='aspect-video rounded'>
+        </div>
+        <div>
+        <p>Episode: {{episode.episode_number}} - {{episode.name}}</p>
+        <p>{{episode.overview}}</p>
 
-        <span hx-get="{%url 'toggle_event' 'like' 'episode' episode.show_id%}?name={{name}}&season={{season.season_number}}&episode={{episode.episode_number}}" 
+        <span hx-get="{%url 'toggle_event' 'like' 'episode' episode.show_id%}?name={{name}}&poster_id={{poster_id}}&season={{season.season_number}}&episode={{episode.episode_number}}" 
         hx-swap='innerHtml' class="material-icons hover:cursor-pointer" style='color:#cf1fa8'>
             {% if episode.liked %} favorite {% else %} favorite_border {% endif %}
         </span>
-        <span hx-get="{%url 'toggle_event' 'watched' 'episode' episode.show_id%}?name={{name}}&season={{season.season_number}}&episode={{episode.episode_number}}" hx-swap='innerHtml' 
-            class="material-icons hover:cursor-pointer
+        <span hx-get="{%url 'toggle_event' 'watched' 'episode' episode.show_id%}?name={{name}}&poster_id={{poster_id}}&season={{season.season_number}}&episode={{episode.episode_number}}" hx-swap='innerHtml' 
+            class="material-icons hover:cursor-pointer watched
             {% if episode.watched %} text-green-500 {% else %} text-red-500 {% endif %}
             " 
             _="on click toggle .text-green-500 .text-red-500 on me">
                 {% if episode.watched %} visibility {% else %} visibility_off {% endif %}
+            
         </span>
 
         {% if episode.rating %}
-        <span class="material-icons text-yellow-500"> {% for rating in ''|ljust:episode.rating %}star {% endfor %} </span>
+            <div id="rating">
+            <span class="material-icons text-yellow-500"> {% for rating in ''|ljust:episode.rating %}star {% endfor %} </span>
+            <span class="material-icons text-red-500 font-bold hover:cursor-pointer" hx-get="{%url 'toggle_event' 'rating' 'episode' episode.show_id%}?name={{name}}&poster_id={{poster_id}}&rating={{episode.rating}}&season={{season.season_number}}&episode={{episode.episode_number}}" hx-target="closest div" hx-swap="outerHTML"> do_not_disturb_on </span>
+            </div>
         {% else %}
-        <select name="rating" hx-get="{%url 'toggle_event' 'rating' 'episode' episode.show_id%}?name={{name}}&season={{season.season_number}}&episode={{episode.episode_number}}" hx-trigger="change" hx-target="this" hx-swap="outerHTML">
-            <option value="0">Rate</option>
-            <option value="1">★</option>
-            <option value="2">★★</option>
-            <option value="3">★★★</option>
-            <option value="4">★★★★</option>
-            <option value="5">★★★★★</option>
-        </select>
+            <select id="rating_select" name="rating" hx-get="{%url 'toggle_event' 'rating' 'episode' episode.show_id%}?name={{name}}&poster_id={{poster_id}}&season={{season.season_number}}&episode={{episode.episode_number}}" hx-trigger="change" hx-target="this" hx-swap="outerHTML">
+                <option value="0">Rate</option>
+                <option value="1">★</option>
+                <option value="2">★★</option>
+                <option value="3">★★★</option>
+                <option value="4">★★★★</option>
+                <option value="5">★★★★★</option>
+            </select>
         {% endif %}
-
-
+    </div>
     </ul>
     {% endfor %}
 </ol>

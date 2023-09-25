@@ -1,72 +1,112 @@
-<head>
-<script src="https://unpkg.com/htmx.org@1.9.5"></script>
-<script src="https://unpkg.com/hyperscript.org@0.9.11"></script>
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com"></script>
-</head>
+{% extends 'base.html' %}
 
-<h1>{{tv.name}}</h1>
-<img
-	src="http://image.tmdb.org/t/p/w500/{{tv.poster_path}}"
-	width="120"
-	alt="{{tv.name}}"
-	srcset=""
-/>
-<p>Avg episode length: {{tv.episode_run_time.0}}</p>
-<p>{% if tv.in_production %} Active {% else %} Ended in {{tv.last_air_date}} {% endif %}</p>
+{% block tv_details %}
 
-<p>{{tv.overview}}</p>
+<div class="w-10/12 mx-auto">
 
-<h2>Genres:</h2>
-{% for genre in tv.genres %} {{genre.name}} - {{genre.id}} {% endfor %}
-<h2>Created By:</h2>
-{% for creator in tv.created_by %} {{creator.name}} {% endfor %}
+    
+    <div class="flex gap-5">
+        
+        <img
+            src="http://image.tmdb.org/t/p/w500/{{tv.poster_path}}"
+            width="300"
+            alt="{{tv.name}}"
+            srcset=""
+        />
 
-<span
-	hx-get="{%url 'toggle_event' 'like' 'tv' tv.id%}?name={{tv.name}}"
-	hx-swap="innerHtml"
-	class="material-icons hover:cursor-pointer"
-	style="color: #cf1fa8"
->
-	{% if user_relation.liked %} favorite {% else %} favorite_border {% endif %}
-</span>
-<span
-	hx-get="{%url 'toggle_event' 'bookmark' 'tv' tv.id%}?name={{tv.name}}"
-	hx-swap="innerHtml"
-	class="material-icons hover:cursor-pointer"
-	style="color: #f7ac34"
->
-	{% if user_relation.bookmarked %} bookmark {% else %} bookmark_border {% endif %}
-</span>
-<span
-	hx-get="{%url 'toggle_event' 'watched' 'tv' tv.id%}?name={{tv.name}}"
-	hx-swap="innerHtml"
-	class="material-icons hover:cursor-pointer
-    {% if user_relation.watched %} text-green-500 {% else %} text-red-500 {% endif %}"
-	_="on click toggle .text-green-500 .text-red-500 on me"
->
-	{% if user_relation.watched %} visibility {% else %} visibility_off {% endif %}
-</span>
+        <div>
+            <h1>{{tv.name}}</h1>
+            <p>Avg episode length: {{tv.episode_run_time.0}}</p>
+            <p>{% if tv.in_production %} Active {% else %} Ended in {{tv.last_air_date}} {% endif %}</p>
 
-<h3><a href="https://www.imdb.com/title/{{tv.external_ids.imdb_id}}">IMDb link</a></h3>
+            <p>{{tv.overview}}</p>
 
-<h3>Total seasons:</h3>
-{{tv.number_of_seasons}}
-<h3>Total episodes:</h3>
-{{tv.number_of_episodes}}
+            <h2>Genres:</h2>
+            {% for genre in tv.genres %} {{genre.name}} - {{genre.id}} {% endfor %}
+            <h2>Created By:</h2>
+            {% for creator in tv.created_by %} {{creator.name}} {% endfor %}
+            
+            {% comment %} Like {% endcomment %}
+            <span
+                hx-get="{%url 'toggle_event' 'like' 'tv' tv.id%}?name={{tv.name}}&poster_id={{tv.poster_path}}"
+                hx-swap="innerHtml"
+                class="material-icons hover:cursor-pointer"
+                style="color: #cf1fa8"
+            >
+                {% if user_relation.liked %} favorite {% else %} favorite_border {% endif %}
+            </span>
+            {% comment %} Bookmark {% endcomment %}
+            <span
+                hx-get="{%url 'toggle_event' 'bookmark' 'tv' tv.id%}?name={{tv.name}}&poster_id={{tv.poster_path}}"
+                hx-swap="innerHtml"
+                class="material-icons hover:cursor-pointer"
+                style="color: #f7ac34"
+            >
+                {% if user_relation.bookmarked %} bookmark {% else %} bookmark_border {% endif %}
+            </span>
+            {% comment %} Watch {% endcomment %}
+            <span
+                hx-get="{%url 'toggle_event' 'watched' 'tv' tv.id%}?name={{tv.name}}&poster_id={{tv.poster_path}}"
+                hx-swap="innerHtml"
+                class="material-icons hover:cursor-pointer
+                {% if user_relation.watched %} text-green-500 {% else %} text-red-500 {% endif %}"
+                _="on click toggle .text-green-500 .text-red-500 on me"
+            >
+                {% if user_relation.watched %} visibility {% else %} visibility_off {% endif %}
+            </span>
 
-<h2>Where to Watch:</h2>
-{% if tv.watch_providers.results.TR.flatrate %} 
-{% for platform in tv.watch_providers.results.TR.flatrate %} {{platform.provider_name}} {% endfor %} 
-{% else %} 
-No providers in Turkey 
-{% endif %}
+            {% comment %} Rating {% endcomment %}
+            {% if user_relation.rating %}
+            <div id="rating">
+            <span class="material-icons text-yellow-500"> {% for rating in ''|ljust:user_relation.rating %}star {% endfor %} </span>
+            <span class="material-icons text-red-500 font-bold hover:cursor-pointer" hx-get="{%url 'toggle_event' 'rating' 'tv' tv.id%}?name={{tv.name}}&poster_id={{tv.poster_path}}&rating={{user_relation.rating}}" hx-target="closest div" hx-swap="outerHTML"> do_not_disturb_on </span>
+            </div>
+            {% else %}
+            <select id="rating_select" name="rating" hx-get="{%url 'toggle_event' 'rating' 'tv' tv.id%}?name={{tv.name}}&poster_id={{tv.poster_path}}" hx-trigger="change" hx-target="this" hx-swap="outerHTML">
+                <option value="0">Rate</option>
+                <option value="1">★</option>
+                <option value="2">★★</option>
+                <option value="3">★★★</option>
+                <option value="4">★★★★</option>
+                <option value="5">★★★★★</option>
+            </select>
+            {% endif %}
+
+            <h3><a href="https://www.imdb.com/title/{{tv.external_ids.imdb_id}}">IMDb link</a></h3>
+
+            <h3>Total seasons:</h3>
+            {{tv.number_of_seasons}}
+            <h3>Total episodes:</h3>
+            {{tv.number_of_episodes}}
+
+            <h2>Where to Watch:</h2>
+            {% if tv.watch_providers.results.TR.flatrate %} 
+            {% for platform in tv.watch_providers.results.TR.flatrate %} {{platform.provider_name}} {% endfor %} 
+            {% else %} 
+            No providers in Turkey 
+            {% endif %}
+        </div>
+</div>
+
+<h2>Cast:</h2>
+<ul class='flex'>
+	{% for cast in tv.aggregate_credits.cast|slice:":10" %}
+	<li>
+		{{cast.name}} as {{cast.roles.0.character}} ({{cast.total_episode_count}} Episodes)
+		<img
+			src="http://image.tmdb.org/t/p/w500/{{cast.profile_path}}"
+			width="120"
+			alt="{{cast.name}}"
+			srcset=""
+		/>
+	</li>
+	{% endfor %}
+</ul>
 
 <h2>Seasons:</h2>
-<ul class="flex gap-2">
+<ul class="flex gap-2 overflow-auto">
 	{% for season in tv.seasons %}
 	<li>
-		{% comment %} <a href="{%url 'season_details' tv.id season.season_number %}"> {% endcomment %}
 		<a hx-get="{%url 'season_details' tv.id season.season_number %}" hx-target='#episode_list' hx-swap='innerHTML'>
 			Season {{season.season_number}} {% if season.season_number == 0 %} (Specials) {% endif%} - ({{season.episode_count}} Episodes)
 			<img
@@ -85,23 +125,9 @@ No providers in Turkey
 
 </div>
 
-<h2>Cast:</h2>
-<ul>
-	{% for cast in tv.aggregate_credits.cast|slice:":10" %}
-	<li>
-		{{cast.name}} as {{cast.roles.0.character}} ({{cast.total_episode_count}} Episodes)
-		<img
-			src="http://image.tmdb.org/t/p/w500/{{cast.profile_path}}"
-			width="120"
-			alt="{{cast.name}}"
-			srcset=""
-		/>
-	</li>
-	{% endfor %}
-</ul>
 
 <h2>You Might Also Like:</h2>
-<ul>
+<ul class='flex'>
 	{% for show in tv.recommendations.results|slice:":10" %}
 	<li>
 		{{show.name}}
@@ -114,3 +140,10 @@ No providers in Turkey
 	</li>
 	{% endfor %}
 </ul>
+
+</div>
+
+
+
+
+{% endblock tv_details %}

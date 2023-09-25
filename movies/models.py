@@ -1,22 +1,32 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, MaxValueValidator
+from users.models import User
 
-class User(AbstractUser):
-    pass
+
+class List(models.Model):
+
+    name = models.CharField(max_length=250)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    description = models.TextField(max_length=2500, null=True)
+
 
 class Movie(models.Model):
 
     tmdb_id = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=250)
+    poster_id = models.CharField(max_length=250, null=True, default=None)
+    list = models.ForeignKey(List, on_delete=models.CASCADE, null=True, default=None)
 
     def __str__(self) -> str:
         return f'{self.name}'
+
 
 class Tv_Series(models.Model):
 
     tmdb_id = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=250)
+    poster_id = models.CharField(max_length=250, null=True, default=None)
+    list = models.ForeignKey(List, on_delete=models.CASCADE, null=True, default=None)
 
     def __str__(self) -> str:
         return f'{self.name}'
@@ -29,11 +39,6 @@ class Tv_Episode(models.Model):
 
     def __str__(self) -> str:
         return f'{self.tv_series.name} - Season {self.season}, Episode {self.episode}'
-    
-class List(models.Model):
-
-    tmdb_id = models.IntegerField(primary_key=True)
-    name = models.CharField(max_length=250)
 
 
 class Event(models.Model):
@@ -48,7 +53,7 @@ class Event(models.Model):
     tv_series = models.ForeignKey(Tv_Series, on_delete=models.CASCADE, null=True)
     tv_episode = models.ForeignKey(Tv_Episode, on_delete=models.CASCADE, null=True)
     list = models.ForeignKey(List, on_delete=models.CASCADE, null=True)
-    rating = models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(10)], default=0)
+    rating = models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)], default=0)
 
     def __str__(self) -> str:
         if self.movie:
