@@ -1,11 +1,14 @@
 import requests
 import json
 
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
 from django.http import HttpResponse
 from django.db.models import Q
 
-from .models import Movie, Tv_Series, List, Event, Tv_Episode, Comment
+from .models import Movie, Tv_Series, List, Event, Tv_Episode, Comment, ListItem
+from users.models import Follow
+from .forms import CreateListForm, UpdateListForm
 
 HEADERS = {
     "accept": "application/json",
@@ -23,15 +26,29 @@ def search(request):
     search_text = request.GET.get('search', '')
     option = request.GET.get('type', 'multi')
 
-    url = f"https://api.themoviedb.org/3/search/{option}?query={search_text}&include_adult=false&page=1&api_key=2821746558a65a3e15b1115130ed64b8"
+    url = f"https://api.themoviedb.org/3/search/{option}?query={search_text}&include_adult=false&page=1"
 
     results = requests.get(url, headers=HEADERS).json()
 
     context = {'results': results, 'type': option}
 
-    print(url)
+    return render(request, 'partials/overall_search_results.html', context)
 
-    return render(request, 'search_results.html', context)
+
+def list_add_search(request):
+
+    search_text = request.GET.get('search', '')
+    list_id = int(request.GET.get('list_id', 0))
+
+    url = f"https://api.themoviedb.org/3/search/multi?query={search_text}&include_adult=false&page=1"
+
+    results = requests.get(url, headers=HEADERS).json()
+
+    results = [result for result in results['results'] if result['media_type'] != 'person']
+
+    context = {'results': results, 'list_id': list_id}
+
+    return render(request, 'partials/list_search_results.html', context)
 
 
 def movie_details(request, id):
@@ -83,8 +100,6 @@ def tv_details(request, id):
 
     related_events = Event.objects.filter(Q(user=request.user), Q(
         tv_series__tmdb_id=id), Q(tv_episode__isnull=True))
-    
-    print(related_events)
 
     liked = True if related_events.filter(Q(type='like')).exists() else False
     bookmarked = True if related_events.filter(Q(type='bookmark')).exists() else False
@@ -101,7 +116,19 @@ def tv_details(request, id):
         'rating' : rating
     }
 
-    context = {'tv': json_data, 'user_relation': user_relation}
+    user_lists = List.objects.filter(user=request.user)
+
+    try:
+        tv_series = Tv_Series.objects.get(tmdb_id=id)
+        list_items_object = ListItem.objects.filter(tv_series=tv_series).filter(list__user=request.user)
+        list_items_dict = {item.list.id:item.id for item in list_items_object}
+
+    except:
+        tv_series = None
+        list_items_dict = {}
+
+
+    context = {'tv': json_data, 'user_relation': user_relation, 'user_lists': user_lists, 'list_items': list_items_dict}
 
     return render(request, 'tv_details.html', context)
 
@@ -211,7 +238,7 @@ def toggle_event(request, event_type, media_type, id):
     elif media_type == 'episode':
         tv_series, _ = Tv_Series.objects.get_or_create(tmdb_id=id, name=name, poster_id=poster_id)
         tv_episode, _ = Tv_Episode.objects.get_or_create(tv_series=tv_series, season=season, episode=episode)
-    else:
+    elif media_type == 'list':
         list, _ = List.objects.get_or_create(tmdb_id=id, name=name)
 
     event, created = Event.objects.get_or_create(user=user, type=type, movie=movie, tv_series=tv_series, tv_episode=tv_episode, list=list, rating=rating)
@@ -229,27 +256,47 @@ def toggle_event(request, event_type, media_type, id):
 
     if created:
         if type == 'like':
-            return HttpResponse('favorite')
+            response = HttpResponse('favorite')
+            message_body = f'{name} is marked as watched!' if media_type != 'episode' else f'{name} - Season {season} - Episode {episode} is liked!'
         elif type == 'bookmark':
-            return HttpResponse('bookmark')
+            response = HttpResponse('bookmark')
+            message_body =f'{name} is bookmarked!'
         elif type == 'watched':
-            return HttpResponse('visibility')
+            response = HttpResponse('visibility')
+            message_body = f'{name} is marked as watched!' if media_type != 'episode' else f'{name} - Season {season} - Episode {episode} is marked as watched!'
         elif type == 'rating':
-
-            return render(request, 'partials/rating.html', params)
-
+            response = render(request, 'partials/rating.html', params)
+            message_body = f'{name} is rated {rating} stars!' if media_type != 'episode' else f'{name} - Season {season} - Episode {episode} is is rated {rating} stars!'
+        
+        response['HX-Trigger'] = json.dumps({
+            'messageCreated': {
+                'message_body': message_body
+            }
+        })
+        return response
     else:
         event.delete()
         if type == 'like':
-            return HttpResponse('favorite_border')
+            response = HttpResponse('favorite_border')
+            message_body = f'{name} is removed from liked!' if media_type != 'episode' else f'{name} - Season {season} - Episode {episode} is removed from liked!'
         elif type == 'bookmark':
-            return HttpResponse('bookmark_border')
+            response = HttpResponse('bookmark_border')
+            message_body = f'{name} is removed from bookmarks!'
         elif type == 'watched':
-            return HttpResponse('visibility_off')
+            response = HttpResponse('visibility_off')
+            message_body = f'{name} is removed from watched!' if media_type != 'episode' else f'{name} - Season {season} - Episode {episode} is removed from watched!'
         elif type == 'rating':
-
-            return render(request, 'partials/rating_select.html', params)
+            response = render(request, 'partials/rating_select.html', params)
+            message_body = f'{name} is removed from watched!' if media_type != 'episode' else f'{name} - Season {season} - Episode {episode}\'s rating is removed!'
         
+        response['HX-Trigger'] = json.dumps({
+            'messageCreated': {
+                'message_body': message_body,
+            }
+        })
+        
+        return response
+
 
 def post_comment(request, media_type, id):
 
@@ -275,7 +322,7 @@ def post_comment(request, media_type, id):
 def list_comments(request, media_type, id):
 
     page = int(request.GET.get('page', 1))
-    pagination = 5
+    pagination = 10
 
     movie, tv_series, list = None, None, None
     if media_type == 'movie':
@@ -299,8 +346,6 @@ def list_comments(request, media_type, id):
     post_comments = Comment.objects.filter(movie=movie, tv_series=tv_series, list=list)
     comment_count = post_comments.count()
     total_pages = (comment_count // pagination) + 1
-
-    print(post_comments, comment_count, total_pages, page)
     
     if comment_count >= page * pagination:
         post_comments = post_comments[comment_count - (page * pagination):]
@@ -319,31 +364,6 @@ def list_comments(request, media_type, id):
     return render(request, 'partials/comment_list.html', context)
 
 
-def delete_rating(request, media_type, id):
-
-    try:
-        season = int(request.GET.get('season', 0))
-        episode = int(request.GET.get('episode', 0))
-    except ValueError:
-        pass
-    
-    if media_type == 'movie':
-        movie = Movie.objects.get(tmdb_id=id)
-    elif media_type == 'tv':
-        tv_series = Tv_Series.objects.get(tmdb_id=id)
-    elif media_type == 'episode':
-        tv_series = Tv_Series.objects.get(tmdb_id=id)
-        tv_episode = Tv_Episode.objects.get(tv_series=tv_series, season=season, episode=episode)
-    else:
-        list = List.objects.get(tmdb_id=id)
-
-    event = Event.objects.get(user=request.user, type='rating', movie=movie, tv_series=tv_series, tv_episode=tv_episode, list=list)
-
-    event.delete()
-
-    return HttpResponse('Rating Deleted')
-
-
 def bulk_watched(request, id):
 
     season = request.GET.get('season', 'all')
@@ -354,9 +374,8 @@ def bulk_watched(request, id):
     if season != 'all':
         loop_over = [int(season)]
     else:
-        first_season = int(request.GET.get('first_season'))
         last_season = int(request.GET.get('last_season'))
-        loop_over = range(first_season,last_season+1)
+        loop_over = range(1,last_season+1)
 
     for season in loop_over:
         season = int(season)
@@ -374,3 +393,134 @@ def bulk_watched(request, id):
 
     print('Done')
     return HttpResponse('visibility')
+
+
+def create_list(request):
+    
+    if request.method == 'POST':
+        form = CreateListForm(request.POST)
+        if form.is_valid():
+            form.instance.user = request.user
+            new_list = form.save()
+            return redirect('list_details', id=new_list.id)
+    else:
+        form = CreateListForm()
+
+    return render(request, 'list_create.html', {'form':form})
+
+
+def list_details(request, id):
+    list = List.objects.get(id=id)
+
+    list_items = ListItem.objects.filter(list=list)
+
+    context = {'list': list, 'list_items': list_items}
+
+    return render(request, 'list_details.html', context)
+
+
+def update_list_details(request, id):
+    
+    list = get_object_or_404(List, id=id)
+
+    if request.method == 'POST':
+        form = UpdateListForm(request.POST, instance=list)
+        if form.is_valid():
+            form.save()
+
+            return redirect('list_details', id=id)
+    else:
+        form = UpdateListForm(instance=list)
+    
+    return render(request, 'list_update.html', {'form': form, 'list': list})
+
+
+def delete_list(request, id):
+    
+    list = List.objects.get(id=id)
+
+    list.delete()
+
+    return redirect('profile_view', username=request.user.username)
+
+
+def add_items_to_list(request, id):
+
+    list = List.objects.get(id=id)
+    media_type = request.GET.get('media_type')
+    media_id = request.GET.get('media_id')
+    name = request.GET.get('name')
+    poster_id = request.GET.get('poster_id')
+    all_items = ListItem.objects.filter(list=list)
+
+    if media_type == 'movie':
+        movie, _ = Movie.objects.get_or_create(tmdb_id=media_id, name=name, poster_id=poster_id)
+        tv_series = None
+    elif media_type == 'tv':
+        tv_series, _ = Tv_Series.objects.get_or_create(tmdb_id=media_id, name=name, poster_id=poster_id)
+        movie = None
+
+    _, created = ListItem.objects.get_or_create(list=list, movie=movie, tv_series=tv_series)
+
+    if created:
+        response = render(request, 'partials/list_items.html',{'list_items': all_items})
+        message_body = f'{name} is added to the list {list.name}'
+    else:
+        response = render(request, 'partials/list_items.html', {'list_items': all_items})
+        message_body = f'{name} is already on the list {list.name}!'
+
+    response['HX-Trigger'] = json.dumps({
+        'messageCreated': {
+            'message_body': message_body,
+        }, 
+        'listItemAdded' : True
+    })
+    return response
+
+
+def delete_items_from_list(request, item_id, list_id):
+    list = get_object_or_404(List, id=list_id)
+    list_item = get_object_or_404(ListItem, id=item_id)
+    try:
+        name = list_item.movie.name
+    except:
+        name = list_item.tv_series.name
+
+    list_item.delete()
+
+    all_items = ListItem.objects.filter(list=list)
+
+    response = render(request, 'partials/list_items.html', {'list_items':all_items})
+    response['HX-Trigger'] = json.dumps({
+        'messageCreated': {
+            'body': f'You have deleted {name} from the list',
+        }
+    })
+    return response
+
+
+def user_feed(request):
+
+    current_page = int(request.GET.get('page', 1))
+    pagination = 30
+
+    following_users = Follow.objects.filter(follower=request.user).values_list('following', flat=True)
+    # Exclude episodes to reduce bloating .exclude(tv_episode__isnull=False)
+    user_feed_events = Event.objects.filter(user__in=following_users)
+
+    event_count = user_feed_events.count()
+    total_pages = (event_count // pagination) + 1
+
+    user_feed_events = user_feed_events[(
+        current_page - 1) * pagination: (pagination * current_page)]
+
+    print(event_count, total_pages)
+
+    context = {
+        'events': user_feed_events,
+        'current_page': current_page,
+        'next_page': current_page + 1,
+        'last_page' : True if current_page == total_pages else False
+    }
+
+    return render(request, 'partials/feed.html', context)

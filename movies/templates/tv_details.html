@@ -1,8 +1,9 @@
 {% extends 'base.html' %}
+{% load custom_tags %}
 
 {% block tv_details %}
 
-<div class="w-10/12 mx-auto">
+<div class="w-2/3 mx-auto">
 
     
     <div class="flex gap-5">
@@ -11,55 +12,73 @@
             src="http://image.tmdb.org/t/p/w500/{{tv.poster_path}}"
             width="300"
             alt="{{tv.name}}"
-            srcset=""
+            class="rounded"
         />
 
         <div>
-            <h1>{{tv.name}}</h1>
-            <p>Avg episode length: {{tv.episode_run_time.0}}</p>
-            <p>{% if tv.in_production %} Active {% else %} Ended in {{tv.last_air_date}} {% endif %}</p>
-
+            <h1 class="text-4xl font-bold">{{tv.name}}</h1>
+            <p>Avg episode length: {{tv.episode_run_time.0}} minutes</p>
             <p>{{tv.overview}}</p>
 
-            <h2>Genres:</h2>
-            {% for genre in tv.genres %} {{genre.name}} - {{genre.id}} {% endfor %}
-            <h2>Created By:</h2>
-            {% for creator in tv.created_by %} {{creator.name}} {% endfor %}
+            <h2>Genres: {% for genre in tv.genres %} {{genre.name}},{% endfor %}</h2>            
+            <h2>Created By:{% for creator in tv.created_by %} {{creator.name}} {% endfor %}</h2>
             
             {% comment %} Like {% endcomment %}
             <span
                 hx-get="{%url 'toggle_event' 'like' 'tv' tv.id%}?name={{tv.name}}&poster_id={{tv.poster_path}}"
                 hx-swap="innerHtml"
-                class="material-icons hover:cursor-pointer"
+                class="material-icons hover:cursor-pointer text-3xl"
                 style="color: #cf1fa8"
+                _="on mouseover toggle .visible .invisible .opacity-0 .opacity-100 on #like-tooltip until mouseleave"
             >
                 {% if user_relation.liked %} favorite {% else %} favorite_border {% endif %}
             </span>
+            <div id="like-tooltip" role="tooltip" class="absolute z-10 invisible inline-block px-3 py-2 text-xs font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip ">
+                Like/Remove Like
+                <div class="tooltip-arrow" data-popper-arrow></div>
+            </div>
+
             {% comment %} Bookmark {% endcomment %}
             <span
                 hx-get="{%url 'toggle_event' 'bookmark' 'tv' tv.id%}?name={{tv.name}}&poster_id={{tv.poster_path}}"
                 hx-swap="innerHtml"
-                class="material-icons hover:cursor-pointer"
+                class="material-icons hover:cursor-pointer text-3xl"
                 style="color: #f7ac34"
+                _="on mouseover toggle .visible .invisible .opacity-0 .opacity-100 on #bookmark-tooltip until mouseleave"
             >
                 {% if user_relation.bookmarked %} bookmark {% else %} bookmark_border {% endif %}
             </span>
+            <div id="bookmark-tooltip" role="tooltip" class="absolute z-10 invisible inline-block px-3 py-2 text-xs font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip ">
+                Bookmark/Remove Bookmark
+                <div class="tooltip-arrow" data-popper-arrow></div>
+            </div>
             {% comment %} Watch {% endcomment %}
             <span
                 hx-get="{%url 'toggle_event' 'watched' 'tv' tv.id%}?name={{tv.name}}&poster_id={{tv.poster_path}}"
                 hx-swap="innerHtml"
-                class="material-icons hover:cursor-pointer
+                class="material-icons hover:cursor-pointer text-3xl
                 {% if user_relation.watched %} text-green-500 {% else %} text-red-500 {% endif %}"
-                _="on click toggle .text-green-500 .text-red-500 on me"
+                _="on click toggle .text-green-500 .text-red-500 on me
+                on mouseover toggle .visible .invisible .opacity-0 .opacity-100 on #watched-tooltip until mouseleave"
             >
                 {% if user_relation.watched %} visibility {% else %} visibility_off {% endif %}
             </span>
+            <div id="watched-tooltip" role="tooltip" class="absolute z-10 invisible inline-block px-3 py-2 text-xs font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip ">
+                Watched/Unwatched
+                <div class="tooltip-arrow" data-popper-arrow></div>
+            </div>
 
             {% comment %} Rating {% endcomment %}
             {% if user_relation.rating %}
-            <div id="rating">
-            <span class="material-icons text-yellow-500"> {% for rating in ''|ljust:user_relation.rating %}star {% endfor %} </span>
-            <span class="material-icons text-red-500 font-bold hover:cursor-pointer" hx-get="{%url 'toggle_event' 'rating' 'tv' tv.id%}?name={{tv.name}}&poster_id={{tv.poster_path}}&rating={{user_relation.rating}}" hx-target="closest div" hx-swap="outerHTML"> do_not_disturb_on </span>
+            <div id="rating" class="inline-block">
+                <span class="material-icons text-yellow-500 text-2xl"> {% for rating in ''|ljust:user_relation.rating %}star {% endfor %} </span>
+                <span class="material-icons text-red-500 font-bold hover:cursor-pointer" hx-get="{%url 'toggle_event' 'rating' 'tv' tv.id%}?name={{tv.name}}&poster_id={{tv.poster_path}}&rating={{user_relation.rating}}" hx-target="closest div" hx-swap="outerHTML"
+                _="on mouseover toggle .visible .invisible .opacity-0 .opacity-100 on #remove-rating-tooltip until mouseleave"
+                > do_not_disturb_on </span>
+                <div id="remove-rating-tooltip" role="tooltip" class="absolute z-10 invisible inline-block px-3 py-2 text-xs font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip ">
+                    Remove Rating
+                    <div class="tooltip-arrow" data-popper-arrow></div>
+                </div>
             </div>
             {% else %}
             <select id="rating_select" name="rating" hx-get="{%url 'toggle_event' 'rating' 'tv' tv.id%}?name={{tv.name}}&poster_id={{tv.poster_path}}" hx-trigger="change" hx-target="this" hx-swap="outerHTML">
@@ -72,78 +91,115 @@
             </select>
             {% endif %}
 
-            <h3><a href="https://www.imdb.com/title/{{tv.external_ids.imdb_id}}">IMDb link</a></h3>
+            {% comment %} Add to list {% endcomment %}
+            <br>
+            <div id="dropdownButton" class="relative inline-block" 
+            _="on click toggle .hidden on #dropdownDivider"
+            >
+            <button class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center" type="button">Add to a List <svg class="w-2.5 h-2.5 ml-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+            </svg>
+            </button>
 
-            <h3>Total seasons:</h3>
-            {{tv.number_of_seasons}}
-            <h3>Total episodes:</h3>
-            {{tv.number_of_episodes}}
+            <!-- Dropdown menu -->
+            <div id="dropdownDivider" class="absolute top-full z-10 bg-white divide-y hidden divide-gray-100 rounded-lg shadow w-44">
+                <ul class="py-2 text-sm text-gray-700 dark:text-gray-200 overflow-y-auto max-h-52" aria-labelledby="dropdownDividerButton">
+                {% for list in user_lists %}
+                <li>
+                    <button
+                    {% if list.id in list_items.keys %}
+                    class="block px-4 py-2 w-full"
+                    disabled='disabled'
+                    {% else %}
+                    hx-post="{%url 'add_items_to_list' list.id%}?media_type=tv&media_id={{tv.id}}&name={{tv.name}}&poster_id={{tv.poster_path}}"
+                    class="block px-4 py-2 hover:bg-gray-200 hover:text-green-600 w-full"
+                    _="on click set @disabled to 'disabled'
+                    then append '<small> (added to the list!)</small>' to me"
+                    {% endif %}
+                    hx-swap="none"
+                    >
+                        {{list.name}} {% if list.id in list_items.keys %} <br><small>(already on the list)</small> {% endif %}
+                    </button>
+                </li>
+                {% endfor %}
+                </ul>
+                <div class="py-2">
+                <a href="{%url 'create_list'%}" class="block px-4 py-2 text-sm text-green-600 hover:bg-gray-100 font-bold">Create New List</a>
+                </div>
+            </div>
+            </div>
 
+            {% comment %} <a href="https://www.imdb.com/title/{{tv.external_ids.imdb_id}}"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/IMDB_Logo_2016.svg/320px-IMDB_Logo_2016.svg.png" width="60px" alt="imdb link"></a> {% endcomment %}
+
+            <h3>{{tv.number_of_seasons}} seasons - {{tv.number_of_episodes}} episodes</h3>
+            
             <h2>Where to Watch:</h2>
             {% if tv.watch_providers.results.TR.flatrate %} 
-            {% for platform in tv.watch_providers.results.TR.flatrate %} {{platform.provider_name}} {% endfor %} 
+            {% for platform in tv.watch_providers.results.TR.flatrate %} 
+            <img src="http://image.tmdb.org/t/p/w45{{platform.logo_path}}" alt="{{platform.provider_name}}" class="rounded">
+            {% comment %} {{platform.provider_name}}  {% endcomment %}
+            {% endfor %} 
             {% else %} 
             No providers in Turkey 
             {% endif %}
         </div>
+    </div>
+
+    <h2 class="text-2xl font-bold mt-4 mb-2">Cast:</h2>
+    <div class='flex gap-2 overflow-auto'>
+        {% for cast in tv.aggregate_credits.cast|slice:":10" %}
+        <a href="{%url 'person_details' cast.id%}">
+            <div class="bg-slate-100 rounded flex-none w-32 flex-col relative hover:cursor-pointer">
+                <img
+                    {% if cast.profile_path %}
+                    src="http://image.tmdb.org/t/p/w500/{{cast.profile_path}}"
+                    {% else %}
+                    src="https://dummyimage.com/500x750/C0C0C0/000?text=No%20Image"
+                    {% endif %}
+                    alt="{{cast.name}}"
+                    class="rounded"
+                >
+                <p class="absolute bottom-0 left-0 right-0 bg-gray-200 text-black p-1 text-xs text-center">{{cast.name}} <br> ({{cast.total_episode_count}} Episodes)</p>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+    <h2 class="text-2xl font-bold mt-4 mb-2">Seasons:</h2>
+    <div class="flex gap-2 overflow-auto mb-3">
+        {% for season in tv.seasons %}
+        <div class="bg-slate-100 rounded flex-none w-32 flex-col relative hover:cursor-pointer"
+            hx-get="{%url 'season_details' tv.id season.season_number %}" hx-target='#episode_list' hx-swap='innerHTML'>
+            <img
+                src="http://image.tmdb.org/t/p/w500/{{season.poster_path}}"
+                alt="{{season.name}}"
+                class="rounded">
+            <p class="absolute bottom-0 left-0 right-0 bg-gray-200 text-black p-1 text-xs text-center">Season {{season.season_number}} <br> ({{season.episode_count}} Episodes)</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div hx-get="{%url 'season_details' tv.id 1 %}" hx-swap='innerHTML' id="episode_list" hx-trigger='load'>
+
+    </div>
+
+
+    <h2 class="text-2xl font-bold mt-4 mb-2">You Might Also Like:</h2>
+
+    <div class='flex gap-2 overflow-auto mb-3'>
+        {% for show in tv.recommendations.results %}
+        <a href="{%url 'tv_details' show.id%}">
+        <div class="bg-slate-100 rounded flex-none w-32 flex-col relative">
+            <img
+                src="http://image.tmdb.org/t/p/w500/{{show.poster_path}}"
+                alt="{{cast.name}}"
+                class="rounded">
+            <p class="absolute bottom-0 left-0 right-0 bg-gray-200 text-black p-2 text-center text-xs">{{show.name}}</p>
+        </div>
+        </a>
+        {% endfor %}
+    </div>
+
 </div>
-
-<h2>Cast:</h2>
-<ul class='flex'>
-	{% for cast in tv.aggregate_credits.cast|slice:":10" %}
-	<li>
-		{{cast.name}} as {{cast.roles.0.character}} ({{cast.total_episode_count}} Episodes)
-		<img
-			src="http://image.tmdb.org/t/p/w500/{{cast.profile_path}}"
-			width="120"
-			alt="{{cast.name}}"
-			srcset=""
-		/>
-	</li>
-	{% endfor %}
-</ul>
-
-<h2>Seasons:</h2>
-<ul class="flex gap-2 overflow-auto">
-	{% for season in tv.seasons %}
-	<li>
-		<a hx-get="{%url 'season_details' tv.id season.season_number %}" hx-target='#episode_list' hx-swap='innerHTML'>
-			Season {{season.season_number}} {% if season.season_number == 0 %} (Specials) {% endif%} - ({{season.episode_count}} Episodes)
-			<img
-				src="http://image.tmdb.org/t/p/w500/{{season.poster_path}}"
-				width="120"
-				alt="{{season.name}}"
-				srcset=""
-			/>
-		</a>
-	</li>
-	{% endfor %}
-</ul>
-
-<h2>Episodes:</h2>
-<div hx-get="{%url 'season_details' tv.id 1 %}" hx-swap='innerHTML' id="episode_list" hx-trigger='load'>
-
-</div>
-
-
-<h2>You Might Also Like:</h2>
-<ul class='flex'>
-	{% for show in tv.recommendations.results|slice:":10" %}
-	<li>
-		{{show.name}}
-		<img
-			src="http://image.tmdb.org/t/p/w500/{{show.poster_path}}"
-			width="120"
-			alt="{{cast.name}}"
-			srcset=""
-		/>
-	</li>
-	{% endfor %}
-</ul>
-
-</div>
-
-
-
 
 {% endblock tv_details %}

@@ -1,0 +1,21 @@
+{% for event in events %}
+
+    <p
+    {% if forloop.counter == 30 %}
+    hx-get="{%url 'feed'%}?page={{next_page}}"
+    hx-trigger="revealed"
+    hx-swap="afterend"
+    {% endif %}
+    >
+        {% if event.type == 'like' %}
+            {{event.user.username}} liked <a href="#">{{event.movie.name}}{{event.tv_series.name}}{{event.list.name}}</a> {{event.created_at}}
+        {% elif event.type == 'watched' %}
+            {{event.user.username}} watched <a href="#">{{event.movie.name}}{{event.tv_series.name}}{{event.list.name}} S{{event.tv_episode.season}} - E{{event.tv_episode.episode}}</a> {{event.created_at}}
+        {% elif event.type == 'bookmark' %}
+            {{event.user.username}} bookmarked <a href="#">{{event.movie.name}}{{event.tv_series.name}}{{event.list.name}}</a> {{event.created_at}}
+        {% elif event.type == 'rating' %}
+            {{event.user.username}} rated <a href="#">{{event.movie.name}}{{event.tv_series.name}}{{event.list.name}}</a> {{event.rating}} stars {{event.created_at}}
+        {% endif %}
+    </p>
+
+{% endfor %}

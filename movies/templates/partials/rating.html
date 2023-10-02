@@ -1,5 +1,4 @@
-<div id="rating">
+<div id="rating" class="inline-block">
     <span class="material-icons text-yellow-500"> {% for _ in ''|ljust:rating %}star {% endfor %} </span>
     <span class="material-icons text-red-500 font-bold hover:cursor-pointer" hx-get="{%url 'toggle_event' event_type media_type id%}?name={{name}}&poster_id={{poster_id}}&rating={{rating}}&season={{season}}&episode={{episode}}" hx-target="closest div" hx-swap="outerHTML"> do_not_disturb_on </span>
 </div>
-

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block list_details %}
+
+<p>Name: {{list.name}}</p>
+<p>Description: {{list.description}}</p>
+<a class="text-red-500" href="{%url 'delete_list' list.id%}" _="on click confirm('Are you sure to delete {{list.name}}')">Delete List (UPDATE TO PREVENT DELETION ON CANCEL)</a>
+<a class="text-green-500" href="{%url 'update_list_details' list.id%}">Update List</a>
+
+Movies: 
+<div id="list_items"> 
+    <ul>
+    {% for item in list_items %}
+        {% if item.movie%}
+            <li>{{item.movie.name}} - Movie - Added on {{item.created_at}} <a class="text-red-500" hx-post="{%url 'delete_items_from_list' item.id list.id%}" hx-swap="innerHTML" hx-target="#list_items">Delete</a></li> 
+        {% elif item.tv_series%}
+            <li>{{item.tv_series.name}} - Tv Series - Added on {{item.created_at}} <a class="text-red-500" hx-post="{%url 'delete_items_from_list' item.id list.id%}" hx-swap="innerHTML" hx-target="#list_items">Delete</a></li> 
+        {% endif %}
+    {% endfor %}
+    </ul>
+</div>
+
+<form >
+<input id="list-item-search"class="form-control bg-gray-50" type="text" 
+        name="search" placeholder="Begin Typing To Search" 
+        hx-get="{%url 'list_add_search'%}?list_id={{list.id}}"
+        hx-trigger="keyup[target.value.length > 2] changed delay:500ms, search, change from:#search_type" 
+        hx-target="#search-results" 
+        hx-swap="innerHTML"
+        _="on keyup[target.value.length > 2] wait 1s show #search-results">
+</form>
+
+<div id="search-results">
+    
+</div>
+
+{% endblock list_details %}

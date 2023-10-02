@@ -1,6 +1,5 @@
 <div class='rounded bg-slate-200 p-3 mb-3'>
-<h1>{{season.name}}</h1>
-<button> 
+<button class="bg-green-500 text-white p-2 rounded-md"> 
     <a hx-get="{% url 'bulk_watched' show_id %}?name={{name}}&poster_id={{poster_id}}&season={{season.season_number}}"
     hx-swap="none"
     _="on click add .text-green-500 to .watched 
@@ -10,9 +9,8 @@
     Mark {{season.name}} Watched 
     </a> 
 </button>
-<br>
-<button> 
-    <a hx-get="{% url 'bulk_watched' show_id %}?name={{name}}&poster_id={{poster_id}}&season=all&first_season={{first_season}}&last_season={{last_season}}"
+<button class="bg-green-500 text-white p-2 rounded-md"> 
+    <a hx-get="{% url 'bulk_watched' show_id %}?name={{name}}&poster_id={{poster_id}}&season=all&last_season={{last_season}}"
     hx-swap="none"
     _="on click add .text-green-500 to .watched 
     remove .text-red-500 from .watched
@@ -29,26 +27,43 @@
         <img src="http://image.tmdb.org/t/p/w500/{{episode.still_path}}" width='160' height='120' alt="" srcset="" class='aspect-video rounded'>
         </div>
         <div>
-        <p>Episode: {{episode.episode_number}} - {{episode.name}}</p>
+        <p>S{{season.season_number}}-E{{episode.episode_number}} - {{episode.name}}</p>
         <p>{{episode.overview}}</p>
 
         <span hx-get="{%url 'toggle_event' 'like' 'episode' episode.show_id%}?name={{name}}&poster_id={{poster_id}}&season={{season.season_number}}&episode={{episode.episode_number}}" 
-        hx-swap='innerHtml' class="material-icons hover:cursor-pointer" style='color:#cf1fa8'>
+        hx-swap='innerHtml' class="material-icons hover:cursor-pointer" style='color:#cf1fa8'
+        _="on mouseover toggle .visible .invisible .opacity-0 .opacity-100 on #liked-tooltip-{{season.season_number}}-{{episode.episode_number}} until mouseleave">
             {% if episode.liked %} favorite {% else %} favorite_border {% endif %}
         </span>
+        <div id="liked-tooltip-{{season.season_number}}-{{episode.episode_number}}" role="tooltip" class="absolute z-10 invisible inline-block px-3 py-2 text-xs font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip ">
+            Like/Remove Like
+            <div class="tooltip-arrow" data-popper-arrow></div>
+        </div>
+
         <span hx-get="{%url 'toggle_event' 'watched' 'episode' episode.show_id%}?name={{name}}&poster_id={{poster_id}}&season={{season.season_number}}&episode={{episode.episode_number}}" hx-swap='innerHtml' 
             class="material-icons hover:cursor-pointer watched
             {% if episode.watched %} text-green-500 {% else %} text-red-500 {% endif %}
             " 
-            _="on click toggle .text-green-500 .text-red-500 on me">
+            _="on click toggle .text-green-500 .text-red-500 on me
+            on mouseover toggle .visible .invisible .opacity-0 .opacity-100 on #watched-tooltip-{{season.season_number}}-{{episode.episode_number}} until mouseleave">
                 {% if episode.watched %} visibility {% else %} visibility_off {% endif %}
-            
         </span>
+        <div id="watched-tooltip-{{season.season_number}}-{{episode.episode_number}}" role="tooltip" class="absolute z-10 invisible inline-block px-3 py-2 text-xs font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip ">
+            Watched/Unwatched
+            <div class="tooltip-arrow" data-popper-arrow></div>
+        </div>
+
 
         {% if episode.rating %}
-            <div id="rating">
+            <div class="inline-block" id="rating">
             <span class="material-icons text-yellow-500"> {% for rating in ''|ljust:episode.rating %}star {% endfor %} </span>
-            <span class="material-icons text-red-500 font-bold hover:cursor-pointer" hx-get="{%url 'toggle_event' 'rating' 'episode' episode.show_id%}?name={{name}}&poster_id={{poster_id}}&rating={{episode.rating}}&season={{season.season_number}}&episode={{episode.episode_number}}" hx-target="closest div" hx-swap="outerHTML"> do_not_disturb_on </span>
+            <span class="material-icons text-red-500 font-bold hover:cursor-pointer" hx-get="{%url 'toggle_event' 'rating' 'episode' episode.show_id%}?name={{name}}&poster_id={{poster_id}}&rating={{episode.rating}}&season={{season.season_number}}&episode={{episode.episode_number}}" hx-target="closest div" hx-swap="outerHTML"
+            _="on mouseover toggle .visible .invisible .opacity-0 .opacity-100 on #remove-rating-tooltip-{{season.season_number}}-{{episode.episode_number}} until mouseleave
+            on click toggle .visible .invisible .opacity-0 .opacity-100 on #remove-rating-tooltip-{{season.season_number}}-{{episode.episode_number}}"> do_not_disturb_on </span>
+            </div>
+            <div id="remove-rating-tooltip-{{season.season_number}}-{{episode.episode_number}}" role="tooltip" class="absolute z-10 invisible inline-block px-3 py-2 text-xs font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip ">
+                Remove Rating
+                <div class="tooltip-arrow" data-popper-arrow></div>
             </div>
         {% else %}
             <select id="rating_select" name="rating" hx-get="{%url 'toggle_event' 'rating' 'episode' episode.show_id%}?name={{name}}&poster_id={{poster_id}}&season={{season.season_number}}&episode={{episode.episode_number}}" hx-trigger="change" hx-target="this" hx-swap="outerHTML">

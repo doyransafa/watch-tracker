@@ -1,0 +1,67 @@
+{% for result in results.results %}
+
+    {# field name changes based on search link. multi gives media type, other searches don't #}
+    <div class="bg-gray-100 w-full border-b-2 flex p-2 gap-5 items-center">
+        {% if type == 'multi' %}
+            
+            {%if result.media_type in 'movie,tv' %}
+                <img 
+                {% if result.poster_path %}
+                src="http://image.tmdb.org/t/p/w500/{{result.poster_path}}" 
+                {% else %}
+                src="https://dummyimage.com/500x750/C0C0C0/000?text=No%20Image"
+                {% endif %}
+                width='50' alt="" srcset="">
+            {% else %}
+                <img 
+                {% if result.profile_path %}
+                src="http://image.tmdb.org/t/p/w500/{{result.profile_path}}" 
+                {% else %}
+                src="https://dummyimage.com/500x750/C0C0C0/000?text=No%20Image"
+                {% endif %}
+                width='50' alt="" srcset="">
+                
+            {% endif %}
+            
+            {% if result.media_type == 'movie' %}
+                <a class="text-lg" href="{%url 'movie_details' result.id %}">{{result.title}} ({{result.release_date|slice:"0:4"}})</a>
+            {% elif result.media_type == 'tv' %}
+                <a class="text-lg" href="{%url 'tv_details' result.id %}">{{result.name}} ({{result.first_air_date|slice:"0:4"}})</a>
+            {% elif result.media_type == 'person' %}
+                <a class="text-lg" href="{%url 'person_details' result.id %}">{{result.name}}</a>
+            {% endif %}
+
+        
+        {% elif type == 'movie' %}
+            <img 
+            {% if result.poster_path %}
+            src="http://image.tmdb.org/t/p/w500/{{result.poster_path}}" 
+            {% else %}
+            src="https://dummyimage.com/500x750/C0C0C0/000?text=No%20Image"
+            {% endif %}
+            width='50' alt="" srcset="">
+            <a class="text-lg" href="{%url 'movie_details' result.id %}">{{result.title}}</a>
+        {% elif type == 'tv' %}
+            <img 
+            {% if result.poster_path %}
+            src="http://image.tmdb.org/t/p/w500/{{result.poster_path}}" 
+            {% else %}
+            src="https://dummyimage.com/500x750/C0C0C0/000?text=No%20Image"
+            {% endif %}
+            width='50' alt="" srcset="">
+            <a class="text-lg" href="{%url 'tv_details' result.id %}">{{result.name}}</a>
+        {% elif type == 'person' %}
+            <img 
+            {% if result.profile_path %}
+            src="http://image.tmdb.org/t/p/w500/{{result.profile_path}}" 
+            {% else %}
+            src="https://dummyimage.com/500x750/C0C0C0/000?text=No%20Image"
+            {% endif %}
+            width='50' alt="" srcset="">
+            <a class="text-lg" href="{%url 'person_details' result.id %}">{{result.name}}</a>
+        {% endif %}
+
+    
+    </div>
+    
+{% endfor %}

@@ -12,7 +12,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"' hx-boost="true" hx-ext="multi-swap">
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"'>
     
     {% include 'navbar.html' %}
     {% block search %} {% endblock search %}
@@ -21,6 +21,33 @@
     {% block tv_details %} {% endblock tv_details %}
     {% block login %} {% endblock login %}
     {% block register %} {% endblock register %}
+    {% block create_list %} {% endblock create_list %}
+    {% block list_items %} {% endblock list_items %}
+    {% block list_details %}{% endblock list_details %}
+
+
+    {% include "partials/toast.html" %}
+
+    <script>
+    document.body.addEventListener('htmx:configRequest', (event) => {
+        event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
+    })
+
+    
+    ;(function() {
+        const toast = document.getElementById('toast-success')
+        const toastMessage = document.getElementById('toast-message')
+        function hideMessage() {
+            toast.classList.add('invisible')
+        }
+        htmx.on('messageCreated', (e) => {
+            setTimeout(hideMessage, 4000);
+            toast.classList.remove('invisible')
+            toastMessage.innerHTML = e.detail.message_body
+        })
+    })()
+
+    </script>
 
 
 </body>

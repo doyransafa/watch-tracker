@@ -1,2 +1,9 @@
 {% extends 'base.html' %}
 
+{% block home %}
+{% comment %} Feed:
+<div id="feed" hx-get="{% url 'feed' %}" hx-trigger="load" hx-swap="innerHTML">
+    {% include 'partials/feed.html' %}
+</div> {% endcomment %}
+
+{% endblock home %}

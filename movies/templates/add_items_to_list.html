@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block list_items %}
+
+<form action="">
+<input id="list_search" class="form-control w-full bg-gray-50" type="text" 
+        name="search" placeholder="Begin Typing To Search" 
+        hx-get="{%url 'list_add_search'%}?list_id={{list_id}}"
+        hx-trigger="keyup[target.value.length > 2] changed delay:500ms, search, change from:#search_type" 
+        hx-target="#search-results" 
+        hx-swap="innerHTML"
+        hx-include="[name='type']"
+        >
+</form>
+
+<div id="search-results">
+
+</div>
+
+{% endblock list_items %}

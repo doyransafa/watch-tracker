@@ -2,101 +2,148 @@
 
 {% block movie_details %}
 
-<div class="w-10/12 mx-auto">
+<div class="w-2/3 mx-auto">
 
 
-<div class="flex gap-5">
+    <div class="flex gap-5">
 
-    <img class="rounded" src="http://image.tmdb.org/t/p/w500/{{movie.poster_path}}" width='300' alt="{{cast.name}}" srcset="">
+        <img class="rounded" src="http://image.tmdb.org/t/p/w500/{{movie.poster_path}}" width='300' alt="{{cast.name}}" srcset="">
 
-    <div class="">
-        <h1>{{movie.title}}</h1>
-        <p>{{movie.tagline}}</p>
-        <p>Overview: {{movie.overview}}</p>
-        <p>Release Date: {{movie.release_date}}</p>
+        <div class="">
+            <h1 class="text-4xl font-bold">{{movie.title}}</h1>
+            <p>{{movie.tagline}}</p>
+            <p>Overview: {{movie.overview}}</p>
+            <p>Release Date: {{movie.release_date}}</p>
 
-        <span hx-get="{%url 'toggle_event' 'like' 'movie' movie.id%}?name={{movie.title}}&poster_id={{movie.poster_path}}" hx-swap='innerHtml' class="material-icons hover:cursor-pointer" style='color:#cf1fa8'>
-            {% if user_relation.liked %} favorite {% else %} favorite_border {% endif %}
-        </span>
-        <span hx-get="{%url 'toggle_event' 'bookmark' 'movie' movie.id%}?name={{movie.title}}&poster_id={{movie.poster_path}}" hx-swap='innerHtml' class="material-icons hover:cursor-pointer" style='color:#f7ac34'>
-            {% if user_relation.bookmarked %} bookmark {% else %} bookmark_border {% endif %}
-        </span>
-        <span hx-get="{%url 'toggle_event' 'watched' 'movie' movie.id%}?name={{movie.title}}&poster_id={{movie.poster_path}}" hx-swap='innerHtml' 
-        class="material-icons hover:cursor-pointer
-        {% if user_relation.watched %} text-green-500 {% else %} text-red-500 {% endif %}
-        " 
-        _="on click toggle .text-green-500 .text-red-500 on me">
-            {% if user_relation.watched %} visibility {% else %} visibility_off {% endif %}
-        </span>
+            {% comment %} Like {% endcomment %}
+            <span 
+            hx-get="{%url 'toggle_event' 'like' 'movie' movie.id%}?name={{movie.title}}&poster_id={{movie.poster_path}}" 
+            hx-swap='innerHtml' 
+            class="material-icons hover:cursor-pointer" 
+            style='color:#cf1fa8'
+            _="on mouseover toggle .visible .invisible .opacity-0 .opacity-100 on #like-tooltip until mouseleave"
+            >
+                {% if user_relation.liked %} favorite {% else %} favorite_border {% endif %}
+            </span>
+            <div id="like-tooltip" role="tooltip" class="absolute z-10 invisible inline-block px-3 py-2 text-xs font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip ">
+                Like/Remove Like
+                <div class="tooltip-arrow" data-popper-arrow></div>
+            </div>
 
-        {% comment %} Rating {% endcomment %}
-        {% if user_relation.rating %}
-        <div id="rating">
-            <span class="material-icons text-yellow-500"> {% for rating in ''|ljust:user_relation.rating %}star {% endfor %} </span>
-            <span class="material-icons text-red-500 font-bold hover:cursor-pointer" hx-get="{%url 'toggle_event' 'rating' 'movie' movie.id%}?name={{movie.title}}&poster_id={{movie.poster_path}}&rating={{user_relation.rating}}" hx-target="closest div" hx-swap="outerHTML"> do_not_disturb_on </span>
+            {% comment %} Bookmark {% endcomment %}
+            <span 
+            hx-get="{%url 'toggle_event' 'bookmark' 'movie' movie.id%}?name={{movie.title}}&poster_id={{movie.poster_path}}" 
+            hx-swap='innerHtml' 
+            class="material-icons hover:cursor-pointer" 
+            style='color:#f7ac34'
+            _="on mouseover toggle .visible .invisible .opacity-0 .opacity-100 on #bookmark-tooltip until mouseleave"
+            >
+                {% if user_relation.bookmarked %} bookmark {% else %} bookmark_border {% endif %}
+            </span>
+            <div id="bookmark-tooltip" role="tooltip" class="absolute z-10 invisible inline-block px-3 py-2 text-xs font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip ">
+                Bookmark/Remove Bookmark
+                <div class="tooltip-arrow" data-popper-arrow></div>
+            </div>
+
+            {% comment %} Watch {% endcomment %}
+            <span 
+                hx-get="{%url 'toggle_event' 'watched' 'movie' movie.id%}?name={{movie.title}}&poster_id={{movie.poster_path}}" 
+                hx-swap='innerHtml' 
+                class="material-icons hover:cursor-pointer
+                {% if user_relation.watched %} text-green-500 {% else %} text-red-500 {% endif %}" 
+                _="on click toggle .text-green-500 .text-red-500 on me
+                on mouseover toggle .visible .invisible .opacity-0 .opacity-100 on #watched-tooltip until mouseleave"
+            >
+                {% if user_relation.watched %} visibility {% else %} visibility_off {% endif %}
+            </span>
+            <div id="watched-tooltip" role="tooltip" class="absolute z-10 invisible inline-block px-3 py-2 text-xs font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip ">
+                Watched/Unwatched
+                <div class="tooltip-arrow" data-popper-arrow></div>
+            </div>
+
+            {% comment %} Rating {% endcomment %}
+            {% if user_relation.rating %}
+            <div id="rating" class="inline-block">
+                <span class="material-icons text-yellow-500"> {% for rating in ''|ljust:user_relation.rating %}star {% endfor %} </span>
+                <span class="material-icons text-red-500 font-bold hover:cursor-pointer" hx-get="{%url 'toggle_event' 'rating' 'movie' movie.id%}?name={{movie.title}}&poster_id={{movie.poster_path}}&rating={{user_relation.rating}}" hx-target="closest div" hx-swap="outerHTML"
+                _="on mouseover toggle .visible .invisible .opacity-0 .opacity-100 on #remove-rating-tooltip until mouseleave"
+                > do_not_disturb_on </span>
+                <div id="remove-rating-tooltip" role="tooltip" class="absolute z-10 invisible inline-block px-3 py-2 text-xs font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip ">
+                    Remove Rating
+                    <div class="tooltip-arrow" data-popper-arrow></div>
+                </div>
+            </div>
+            {% else %}
+            <select name="rating" hx-get="{%url 'toggle_event' 'rating' 'movie' movie.id%}?name={{movie.title}}&poster_id={{movie.poster_path}}" hx-trigger="change" hx-target="this" hx-swap="outerHTML">
+                <option value="0">Rate</option>
+                <option value="1">★</option>
+                <option value="2">★★</option>
+                <option value="3">★★★</option>
+                <option value="4">★★★★</option>
+                <option value="5">★★★★★</option>
+            </select>
+            {% endif %}
+
+            <h2>Director(s): {% for member in movie.credits.crew %} {% if member.job == "Director" %} {{member.name}} {% endif %} {% endfor %}</h2> 
+
+            <h2>Genres:</h2> {% for genre in movie.genres %} {{genre.name}} - {{genre.id}} {% endfor %}
+
+            <h2>Duration: {{ movie.runtime }}</h2> 
+
+            <h2>Where to Watch:</h2> 
+            {% for platform in movie.watch_providers.results.TR.flatrate  %} 
+            <img src="http://image.tmdb.org/t/p/w45{{platform.logo_path}}" alt="{{platform.provider_name}}" class="rounded inline-block mr-2">
+            {% endfor %}
         </div>
-        {% else %}
-        <select name="rating" hx-get="{%url 'toggle_event' 'rating' 'movie' movie.id%}?name={{movie.title}}&poster_id={{movie.poster_path}}" hx-trigger="change" hx-target="this" hx-swap="outerHTML">
-            <option value="0">Rate</option>
-            <option value="1">★</option>
-            <option value="2">★★</option>
-            <option value="3">★★★</option>
-            <option value="4">★★★★</option>
-            <option value="5">★★★★★</option>
-        </select>
-        {% endif %}
 
-        <h2>Director(s): {% for member in movie.credits.crew %} {% if member.job == "Director" %} {{member.name}} {% endif %} {% endfor %}</h2> 
-
-        <h2>Genres:</h2> {% for genre in movie.genres %} {{genre.name}} - {{genre.id}} {% endfor %}
-
-        <h2>Duration: {{ movie.runtime }}</h2> 
-
-        {% if movie.belongs_to_collection %}
-
-        <h2>Part of Series {{movie.belongs_to_collection.name}}</h2> 
-
-        {% endif %}
-
-        <h2>Where to Watch:</h2> {% for platform in movie.watch_providers.results.TR.flatrate  %} {{platform.provider_name}} {% endfor %}
-        <p><a href="https://www.imdb.com/title/{{movie.imdb_id}}/">IMDb link</a></p>
     </div>
 
-</div>
+    <h2 class="text-2xl font-bold mt-4 mb-2">Cast:</h2>
+    <div class='flex gap-2 overflow-auto'>
+        {% for cast in movie.credits.cast|slice:":10" %}
+        <a href="{%url 'person_details' cast.id%}">
+            <div class="bg-slate-100 rounded flex-none w-32 flex-col relative hover:cursor-pointer">
+                <img
+                    {% if cast.profile_path %}
+                    src="http://image.tmdb.org/t/p/w500/{{cast.profile_path}}"
+                    {% else %}
+                    src="https://dummyimage.com/500x750/C0C0C0/000?text=No%20Image"
+                    {% endif %}
+                    alt="{{cast.name}}"
+                    class="rounded"
+                >
+                <p class="absolute bottom-0 left-0 right-0 bg-gray-200 text-black p-1 text-xs text-center">{{cast.name}} <br> (as {{cast.character}})</p>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
 
-<h2>Cast:</h2>
-<ul class="flex">
-    {% for cast in movie.credits.cast|slice:":10" %}
-    <li> <img src="http://image.tmdb.org/t/p/w500/{{cast.profile_path}}" width='100' alt="{{cast.name}}" srcset="">  Name: <a href="{%url 'person_details' cast.id %}">{{cast.name}}</a> - Character: {{cast.character}} </li>
-    {% endfor %}
-</ul>
+    <h2 class="text-2xl font-bold mt-4 mb-2">You Might Also Like:</h2>
 
-<h2>You Might Also Like:</h2>
-<ul class="flex">
-	{% for movie in movie.recommendations.results|slice:":10" %}
-	<li>
-		{{movie.title}}
-		<img
-			src="http://image.tmdb.org/t/p/w500/{{movie.poster_path}}"
-			width="120"
-			alt="{{cast.name}}"
-			srcset=""
-		/>
-	</li>
-	{% endfor %}
-</ul>
+    <div class='flex gap-2 overflow-auto mb-3'>
+        {% for movie in movie.recommendations.results %}
+        <a href="{%url 'tv_details' movie.id%}">
+        <div class="bg-slate-100 rounded flex-none w-32 flex-col relative">
+            <img
+                src="http://image.tmdb.org/t/p/w500/{{movie.poster_path}}"
+                alt="{{cast.name}}"
+                class="rounded">
+            <p class="absolute bottom-0 left-0 right-0 bg-gray-200 text-black p-2 text-center text-xs">{{movie.title}}</p>
+        </div>
+        </a>
+        {% endfor %}
+    </div>
 
+    <h2 class="text-2xl font-bold mt-4 mb-2">Discussion:</h2>
+    <div id="comments" hx-get="{% url 'list_comments' 'movie' movie.id%}" hx-trigger="load, submit delay:250ms from:#comment" hx-swap="innerHTML">
+        {% include 'partials/comment_list.html' %}
+    </div>
 
-<div id="comments" hx-get="{% url 'list_comments' 'movie' movie.id%}" hx-trigger="load, submit delay:250ms from:#comment" hx-swap="innerHTML">
-    {% include 'partials/comment_list.html' %}
-</div>
-
-<form id="comment" action="" hx-post="{%url 'post_comment' 'movie' movie.id%}?name={{movie.title}}&poster_id={{movie.poster_path}}" hx-swap="none" hx-on::after-request="if(event.detail.successful) this.reset()">
-    {% csrf_token %}
-    <textarea name="comment" id="" cols="100" rows="5"></textarea>
-    <button type="submit">Send Comment</button>
-</form>
-
+    <form id="comment" action="" hx-post="{%url 'post_comment' 'movie' movie.id%}?name={{movie.title}}&poster_id={{movie.poster_path}}" hx-swap="none" hx-on::after-request="if(event.detail.successful) this.reset()">
+        {% csrf_token %}
+        <textarea name="comment" id="" cols="100" rows="5"></textarea>
+        <button type="submit">Send Comment</button>
+    </form>
 
 </div>
 {% endblock movie_details %}
