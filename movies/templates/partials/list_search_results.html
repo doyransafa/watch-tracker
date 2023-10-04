@@ -6,17 +6,17 @@
 
         {% if result.media_type == 'movie' %}
             <a hx-post="{%url 'add_items_to_list' list_id%}?media_type={{result.media_type}}&media_id={{result.id}}&name={{result.title}}&poster_id={{result.poster_path}}"
-            hx-swap="innerHTML"
+            hx-swap="afterbegin"
             hx-target="#list_items"
-            _="on listItemAdded put '' into #list-item-search's value then hide #search-results"
+            _="on listItemAdded put '' into #list-item-search's value then hide #list-search-results"
             >{{result.title}}
             </a>
             <img src="http://image.tmdb.org/t/p/w500/{{result.poster_path}}" width='60' alt="" srcset="">
         {% elif result.media_type == 'tv' %}
             <a hx-post="{%url 'add_items_to_list' list_id %}?media_type={{result.media_type}}&media_id={{result.id}}&name={{result.name}}&poster_id={{result.poster_path}}"
-            hx-swap="innerHTML"
+            hx-swap="afterbegin"
             hx-target="#list_items"
-            _="on listItemAdded put '' into #list-item-search's value then hide #search-results"
+            _="on listItemAdded put '' into #list-item-search's value then hide #list-search-results"
             >{{result.name}}</a>
             <img src="http://image.tmdb.org/t/p/w500/{{result.poster_path}}" width='60' alt="" srcset="">
         {% endif %}

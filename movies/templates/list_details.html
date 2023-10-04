@@ -2,36 +2,86 @@
 
 {% block list_details %}
 
-<p>Name: {{list.name}}</p>
-<p>Description: {{list.description}}</p>
-<a class="text-red-500" href="{%url 'delete_list' list.id%}" _="on click confirm('Are you sure to delete {{list.name}}')">Delete List (UPDATE TO PREVENT DELETION ON CANCEL)</a>
-<a class="text-green-500" href="{%url 'update_list_details' list.id%}">Update List</a>
-
-Movies: 
-<div id="list_items"> 
-    <ul>
-    {% for item in list_items %}
-        {% if item.movie%}
-            <li>{{item.movie.name}} - Movie - Added on {{item.created_at}} <a class="text-red-500" hx-post="{%url 'delete_items_from_list' item.id list.id%}" hx-swap="innerHTML" hx-target="#list_items">Delete</a></li> 
-        {% elif item.tv_series%}
-            <li>{{item.tv_series.name}} - Tv Series - Added on {{item.created_at}} <a class="text-red-500" hx-post="{%url 'delete_items_from_list' item.id list.id%}" hx-swap="innerHTML" hx-target="#list_items">Delete</a></li> 
-        {% endif %}
-    {% endfor %}
-    </ul>
-</div>
-
+{% if list.user == request.user %}
 <form >
 <input id="list-item-search"class="form-control bg-gray-50" type="text" 
-        name="search" placeholder="Begin Typing To Search" 
+        name="search" placeholder="Add Items to List" 
         hx-get="{%url 'list_add_search'%}?list_id={{list.id}}"
         hx-trigger="keyup[target.value.length > 2] changed delay:500ms, search, change from:#search_type" 
-        hx-target="#search-results" 
+        hx-target="#list-search-results" 
         hx-swap="innerHTML"
-        _="on keyup[target.value.length > 2] wait 1s show #search-results">
+        _="on keyup[target.value.length > 2] wait 1s show #list-search-results">
 </form>
 
-<div id="search-results">
+<div id="list-search-results">
     
 </div>
+{% endif %}
+
+
+<div class="w-2/3 mx-auto">
+
+<div id="list-details-header">
+
+<div>
+    <p>Name: {{list.name}}</p>
+    <p>Description: {{list.description}}</p>
+    <p>Creator: {{list.user}}</p>
+    <p>Items: {{list_items|length}} <br> (You have watched {{users_watched}} of them)</p>
+</div>
+{% if list.user == request.user %}
+<div>
+    <a class="text-red-500" hx-delete="{%url 'delete_list' list.id%}" hx-confirm="('Are you sure to delete {{list.name}}')" hx-swap="none">Delete List (UPDATE TO PREVENT DELETION ON CANCEL)</a>
+    <a class="text-green-500" href="{%url 'update_list_details' list.id%}">Update List</a>
+</div>
+{% endif %}
+</div>
+
+    <div id="list_items" class='flex flex-wrap gap-3'>
+        {% for item in list_items %}
+            {% if item.movie%}
+                <div id="item-{{item.id}}" class="bg-slate-100 rounded flex-none w-32 flex-col relative hover:cursor-pointer">
+                    {% if list.user == request.user %}
+                    <button 
+                    class="bg-red-500 rounded absolute top-0 right-0 p-1 m-1 text-xs text-white z-10" 
+                    hx-post="{%url 'delete_items_from_list' item.id%}" 
+                    hx-swap="none"
+                    _="on click remove #item-{{item.id}}">Delete</button>
+                    {% endif %}
+                    <a href="{%url 'movie_details' item.movie.tmdb_id%}">
+                        <img
+                        {% if item.movie.poster_id == 'None' %}
+                        src="https://dummyimage.com/500x750/C0C0C0/000?text=No%20Image"
+                        {% else %}
+                        src="http://image.tmdb.org/t/p/w500{{item.movie.poster_id}}"
+                        {% endif %}
+                        alt="{{item.movie.name}}" class="rounded">
+                        <p class="absolute bottom-0 left-0 right-0 bg-gray-200 text-black p-1 text-xs text-center">{{item.movie.name}}</p>
+                    </a>
+                </div>
+            {% elif item.tv_series%}
+                <div id="item-{{item.id}}" class="bg-slate-100 rounded flex-none w-32 flex-col relative hover:cursor-pointer">
+                    {% if list.user == request.user %}
+                    <button 
+                    class="bg-red-500 rounded absolute top-0 right-0 p-1 m-1 text-xs text-white z-10" 
+                    hx-post="{%url 'delete_items_from_list' item.id%}" 
+                    hx-swap="none"
+                    _="on click remove #item-{{item.id}}">Delete</button>
+                    {% endif %}
+                    <a href="{%url 'tv_details' item.tv_series.tmdb_id%}">
+                        <img
+                        {% if item.tv_series.poster_id == 'None' %}
+                        src="https://dummyimage.com/500x750/C0C0C0/000?text=No%20Image"
+                        {% else %}
+                        src="http://image.tmdb.org/t/p/w500{{item.tv_series.poster_id}}"
+                        {% endif %}
+                        alt="{{item.tv_series.name}}" class="rounded">
+                        <p class="absolute bottom-0 left-0 right-0 bg-gray-200 text-black p-1 text-xs text-center">{{item.tv_series.name}}</p>
+                    </a>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
 
 {% endblock list_details %}

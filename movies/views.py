@@ -268,12 +268,6 @@ def toggle_event(request, event_type, media_type, id):
             response = render(request, 'partials/rating.html', params)
             message_body = f'{name} is rated {rating} stars!' if media_type != 'episode' else f'{name} - Season {season} - Episode {episode} is is rated {rating} stars!'
         
-        response['HX-Trigger'] = json.dumps({
-            'messageCreated': {
-                'message_body': message_body
-            }
-        })
-        return response
     else:
         event.delete()
         if type == 'like':
@@ -289,13 +283,13 @@ def toggle_event(request, event_type, media_type, id):
             response = render(request, 'partials/rating_select.html', params)
             message_body = f'{name} is removed from watched!' if media_type != 'episode' else f'{name} - Season {season} - Episode {episode}\'s rating is removed!'
         
-        response['HX-Trigger'] = json.dumps({
-            'messageCreated': {
-                'message_body': message_body,
-            }
-        })
-        
-        return response
+    response['HX-Trigger'] = json.dumps({
+        'messageCreated': {
+            'message_body': message_body,
+        }
+    })
+    
+    return response
 
 
 def post_comment(request, media_type, id):
@@ -411,10 +405,18 @@ def create_list(request):
 
 def list_details(request, id):
     list = List.objects.get(id=id)
+    user = request.user
+    user_events = Event.objects.filter(
+        user=user, type='watched').exclude(tv_episode__isnull=False)
+    users_watched = [item.movie if item.movie else item.tv_series for item in user_events]
 
     list_items = ListItem.objects.filter(list=list)
+    list_movies_series = [item.movie if item.movie else item.tv_series for item in list_items]
 
-    context = {'list': list, 'list_items': list_items}
+    users_watched_in_list = [item for item in users_watched if item in list_movies_series]
+
+    context = {'list': list, 'list_items': list_items,
+               'users_watched': len(users_watched_in_list)}
 
     return render(request, 'list_details.html', context)
 
@@ -438,10 +440,19 @@ def update_list_details(request, id):
 def delete_list(request, id):
     
     list = List.objects.get(id=id)
+    username = request.user.username
 
     list.delete()
 
-    return redirect('profile_view', username=request.user.username)
+    response = HttpResponse()
+    response['HX-Redirect'] = f'http://127.0.0.1:8000/user/profile/{username}'
+    response['HX-Trigger'] = json.dumps({
+        'messageCreated': {
+            'message_body': f'List deleted!',
+        }
+    })
+    return response
+
 
 
 def add_items_to_list(request, id):
@@ -451,7 +462,6 @@ def add_items_to_list(request, id):
     media_id = request.GET.get('media_id')
     name = request.GET.get('name')
     poster_id = request.GET.get('poster_id')
-    all_items = ListItem.objects.filter(list=list)
 
     if media_type == 'movie':
         movie, _ = Movie.objects.get_or_create(tmdb_id=media_id, name=name, poster_id=poster_id)
@@ -460,13 +470,13 @@ def add_items_to_list(request, id):
         tv_series, _ = Tv_Series.objects.get_or_create(tmdb_id=media_id, name=name, poster_id=poster_id)
         movie = None
 
-    _, created = ListItem.objects.get_or_create(list=list, movie=movie, tv_series=tv_series)
+    item, created = ListItem.objects.get_or_create(list=list, movie=movie, tv_series=tv_series)
 
     if created:
-        response = render(request, 'partials/list_items.html',{'list_items': all_items})
+        response = render(request, 'partials/list_items.html', {'item': item, 'list':list})
         message_body = f'{name} is added to the list {list.name}'
     else:
-        response = render(request, 'partials/list_items.html', {'list_items': all_items})
+        response = render(request, 'partials/list_items.html')
         message_body = f'{name} is already on the list {list.name}!'
 
     response['HX-Trigger'] = json.dumps({
@@ -478,8 +488,7 @@ def add_items_to_list(request, id):
     return response
 
 
-def delete_items_from_list(request, item_id, list_id):
-    list = get_object_or_404(List, id=list_id)
+def delete_items_from_list(request, item_id):
     list_item = get_object_or_404(ListItem, id=item_id)
     try:
         name = list_item.movie.name
@@ -488,14 +497,15 @@ def delete_items_from_list(request, item_id, list_id):
 
     list_item.delete()
 
-    all_items = ListItem.objects.filter(list=list)
-
-    response = render(request, 'partials/list_items.html', {'list_items':all_items})
+    response = render(request, 'partials/list_items.html')
+    message_body = f'You have deleted {name} from the list'
     response['HX-Trigger'] = json.dumps({
         'messageCreated': {
-            'body': f'You have deleted {name} from the list',
+            'message_body': message_body,
         }
     })
+
+    print(response['HX-Trigger'])
     return response
 
 

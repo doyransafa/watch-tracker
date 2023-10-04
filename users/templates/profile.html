@@ -1,8 +1,33 @@
-{{profile}}
+{% extends "base.html" %}
+{% block profile_page %}
+
+<div class="w-3/4 mx-auto">
+
+<div id="profileDetails">
+
+    <h1>{{username}}</h1>
 
 <h4>Watched {{watched.movies|length}} Movies, {{watched.tv_series|length}} Tv Series and {{watched.tv_episodes|length}} Episodes</h4>
 <h4>Liked {{likes.movies|length}} Movies, {{likes.tv_series|length}} Tv Series and {{likes.tv_episodes|length}} Episodes</h4>
 <h4>Bookmarked {{bookmarks.movies|length}} Movies, {{bookmarks.tv_series|length}} Tv Series</h4>
+<h4>{{followers|length}} Followers</h4>
+<h4>{{following|length}} Following</h4>
+
+
+</div>
+
+Collections:
+
+<div id="tabs" hx-target="#tab-contents" role="tablist" _="on htmx:afterOnLoad set @aria-selected of <[aria-selected=true]/> to false tell the target take .selected set @aria-selected to true">
+	<button role="tab" aria-controls="tab-content" aria-selected="true" hx-get="/tab1" class="selected">Watched</button>
+	<button role="tab" aria-controls="tab-content" aria-selected="false" hx-get="/tab2">Liked</button>
+	<button role="tab" aria-controls="tab-content" aria-selected="false" hx-get="/tab3">Bookmarked</button>
+	<button role="tab" aria-controls="tab-content" aria-selected="false" hx-get="/tab3">Lists</button>
+</div>
+
+<div id="tab-contents" role="tabpanel" hx-get="/tab1" hx-trigger="load">
+    this will display items
+</div>
 
 
 <h1>Following:</h1>
@@ -87,3 +112,5 @@ User doesn't have any ratings yet!
 {% else %}
 User doesn't have any watched stuff yet!
 {% endif %}
+</div>
+{% endblock profile_page %}

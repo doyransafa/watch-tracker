@@ -20,6 +20,10 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    #websocket
+    "daphne",
+    "channels",
+    
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -134,3 +138,11 @@ CRISPY_TEMPLATE_PACK = "tailwind"
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+ASGI_APPLICATION = "movie_tracker.asgi.application"
+
+### should swap to redis for production ###
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}

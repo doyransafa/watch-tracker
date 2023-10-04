@@ -10,6 +10,10 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
     
+    @property
+    def notification_group_name(self):
+        return f'user_{self.id}'
+    
 
 
 class Profile(models.Model):

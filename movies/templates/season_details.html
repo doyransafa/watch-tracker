@@ -24,7 +24,13 @@
     {% for episode in season.episodes %}
     <ul class='flex gap-4 rounded bg-slate-200 p-3'>
         <div class='flex-shrink-0'>
-        <img src="http://image.tmdb.org/t/p/w500/{{episode.still_path}}" width='160' height='120' alt="" srcset="" class='aspect-video rounded'>
+        <img 
+        {% if episode.still_path %}
+        src="http://image.tmdb.org/t/p/w500/{{episode.still_path}}"
+        {% else %}
+        src="https://dummyimage.com/750x500/C0C0C0/000?text=No%20Image"
+        {% endif %}
+        width='160' height='120' alt="" srcset="" class='aspect-video rounded'>
         </div>
         <div>
         <p>S{{season.season_number}}-E{{episode.episode_number}} - {{episode.name}}</p>

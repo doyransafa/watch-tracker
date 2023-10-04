@@ -9,7 +9,11 @@
     <div class="flex gap-5">
         
         <img
+            {% if tv.poster_path %}
             src="http://image.tmdb.org/t/p/w500/{{tv.poster_path}}"
+            {% else %}
+            src="https://dummyimage.com/500x750/C0C0C0/000?text=No%20Image"
+            {% endif %}
             width="300"
             alt="{{tv.name}}"
             class="rounded"
@@ -171,7 +175,11 @@
         <div class="bg-slate-100 rounded flex-none w-32 flex-col relative hover:cursor-pointer"
             hx-get="{%url 'season_details' tv.id season.season_number %}" hx-target='#episode_list' hx-swap='innerHTML'>
             <img
+                {% if season.poster_path %}
                 src="http://image.tmdb.org/t/p/w500/{{season.poster_path}}"
+                {% else %}
+                src="https://dummyimage.com/500x750/C0C0C0/000?text=No%20Image"
+                {% endif %}
                 alt="{{season.name}}"
                 class="rounded">
             <p class="absolute bottom-0 left-0 right-0 bg-gray-200 text-black p-1 text-xs text-center">Season {{season.season_number}} <br> ({{season.episode_count}} Episodes)</p>

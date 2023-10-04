@@ -24,7 +24,7 @@ urlpatterns = [
     path('update_list_details/<int:id>', update_list_details, name='update_list_details'),
     path('list_details/<int:id>', list_details, name='list_details'),
     path('add_items_to_list/<int:id>', add_items_to_list, name='add_items_to_list'),
-    path('delete_items_from_list/<int:item_id>/<int:list_id>', delete_items_from_list, name='delete_items_from_list'),
+    path('delete_items_from_list/<int:item_id>', delete_items_from_list, name='delete_items_from_list'),
     path('list_add_search', list_add_search, name='list_add_search'),
     
 ]

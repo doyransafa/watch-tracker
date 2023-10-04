@@ -6,13 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Movie Tracker</title>
     <script src="https://unpkg.com/htmx.org@1.9.5"></script>
-    <script src="https://unpkg.com/htmx.org/dist/ext/multi-swap.js"></script>
+    <script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
     <script src="https://unpkg.com/hyperscript.org@0.9.11"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.8.1/flowbite.min.css" rel="stylesheet" />
 </head>
 
-<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"'>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"' hx-ext="ws" ws-connect="/ws/notifications/">
     
     {% include 'navbar.html' %}
     {% block search %} {% endblock search %}
@@ -22,8 +23,8 @@
     {% block login %} {% endblock login %}
     {% block register %} {% endblock register %}
     {% block create_list %} {% endblock create_list %}
-    {% block list_items %} {% endblock list_items %}
     {% block list_details %}{% endblock list_details %}
+    {% block profile_page %} {% endblock profile_page %}
 
 
     {% include "partials/toast.html" %}
@@ -48,7 +49,7 @@
     })()
 
     </script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.8.1/flowbite.min.js"></script>
 
 </body>
 </html>
