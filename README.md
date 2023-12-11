@@ -14,7 +14,7 @@
 
 
 ## Video Demo
-### [Demo Video Link](https://drive.google.com/file/d/10HyCOCk8ZOyzkELMJtfKsof7TTHGLkzk/view)
+### [Demo Video Link](https://www.youtube.com/watch?v=Sk3T5g_yqG8)
 
 <img width="721" alt="image" src="https://github.com/doyransafa/watch-tracker/assets/72417108/0ec6bb4d-1814-435b-956b-8131bfe9161a">
 
